@@ -1,0 +1,34 @@
+{
+        "lg_title": "Hello!",
+        "lg_subTitle": "Please enter information to log in",
+        "lg_username": "Enter username or email",
+        "lg_password": "Enter password",
+        "lg_savePassword": "Save password",
+        "lg_forgotPassword": "Forgot password ?",
+        "lg_btn": "Log in",
+        "lg_text": "Do not have an account? ",
+        "lg_register": "Register",
+        "lg_errorEmpty": "Do not leave this field blank",
+        "lg_errorUsername": "Email/Phone number is invalid",
+        "lg_errorPassword": "Password is not correct. Please try again",
+        "lg_errorLengthPassword": "Password from 8-15 characters",
+
+        "forgot_title": "Forgot password",
+        "forgot_subTitle": "Please enter your phone number, we will send OTP to this phone number",
+        "forgot_phone": "Enter phone number",
+        "forgot_btn": "Confirm",
+
+        "otp_title": "OTP Authentication",
+        "otp_subTitle": "Please enter the OTP number sent to the phone number",
+        "otp_receive": "Didn't receive the verification code?",
+        "otp_retry": "Retry",
+        "otp_btn": "Confirm",
+
+        "register_title": "Register",
+        "register_text" :"Please enter the login information",
+        "register_fullname" : "Enter fullname",
+        "register_email" : "Enter email",
+        "register_phoneNumber" : "Enter phoneNumber",
+        "register_password" : "Enter password",
+        "register_checkpassword" : "Enter the password"
+}

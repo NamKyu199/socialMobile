@@ -1,0 +1,34 @@
+{
+    "lg_title": "Xin chào!",
+    "lg_subTitle": "Vui lòng nhập thông tin để đăng nhập",
+    "lg_username": "Nhập tên đăng nhập hoặc email",
+    "lg_password": "Nhập mật khẩu",
+    "lg_savePassword": "Lưu mật khẩu",
+    "lg_forgotPassword": "Quên mật khẩu ?",
+    "lg_btn": "Đăng nhập",
+    "lg_text": "Bạn chưa có tài khoản? ",
+    "lg_register": "Đăng ký",
+    "lg_errorEmpty": "Không bỏ trống trường này",
+    "lg_errorUsername": "Email/Số điện thoại không hợp lệ",
+    "lg_errorPassword": "Mật khẩu chưa chính xác. Vui lòng thử lại",
+    "lg_errorLengthPassword": "Mật khẩu từ 8-15 ký tự",
+
+    "forgot_title": "Quên mật khẩu",
+    "forgot_subTitle": "Vui lòng nhập số điện thoại của bạn, chúng tôi sẽ gửi OTP tới số điện thoại này",
+    "forgot_phone":"Nhập số điện thoại",
+    "forgot_btn":"Xác nhận",
+
+    "otp_title": "Xác thực OTP",
+    "otp_subTitle": "Vui lòng nhập số OTP đã gửi đến số điện thoại",
+    "otp_receive": "Không nhận được mã xác thực?",
+    "otp_retry": "Thử lại",
+    "otp_btn": "Xác nhận",
+
+    "register_title": "Đăng ký",
+    "register_text" :"Vui lòng nhập thông tin đăng ký",
+    "register_fullname" : "Họ và tên",
+    "register_email" : "Nhập email",
+    "register_phoneNumber" : "Nhập số điện thoại",
+    "register_password" : "Nhập mật khẩu",
+    "register_checkpassword" : "Nhập lại mật khẩu"
+}
