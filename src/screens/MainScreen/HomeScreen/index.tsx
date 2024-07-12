@@ -20,6 +20,7 @@ const HomeScreen = ({ navigation }: any) => {
     const [questions, setQuestions] = useState<any[]>([]);
     const [likeIds, setLikeIds] = useState<string[]>([]);
     const [voteCounts, setVoteCounts] = useState<{ [key: string]: number }>({});
+    const [activeIndex, setActiveIndex] = useState(0);
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -196,27 +197,25 @@ const HomeScreen = ({ navigation }: any) => {
     const getCurrentDate = () => {
         return moment().tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
     };
+
+    moment.locale('vi');
     const formatVietnamDateMore = (utcDate: any) => {
         const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
-        const daysOfWeek: any = {
-            'Sunday': 'CHỦ NHẬT',
-            'Monday': 'THỨ HAI',
-            'Tuesday': 'THỨ BA',
-            'Wednesday': 'THỨ TƯ',
-            'Thursday': 'THỨ NĂM',
-            'Friday': 'THỨ SÁU',
-            'Saturday': 'THỨ BẢY'
-        };
-        const dayOfWeek = daysOfWeek[vietnamDate.format('dddd')];
+        const dayOfWeek = vietnamDate.format('dddd').toUpperCase();
         const day = vietnamDate.date();
-        const month = vietnamDate.month() + 1; // month() is zero-based, so we add 1
+        const month = vietnamDate.month() + 1;
         const year = vietnamDate.year();
-        return `${dayOfWeek}, ${day} THÁNG ${month} NĂM ${year}`;
+        const vietnameseDaysOfWeek: { [key: string]: string } = {
+            'THỨ HAI': 'THỨ HAI',
+            'THỨ BA': 'THỨ BA',
+            'THỨ TƯ': 'THỨ TƯ',
+            'THỨ NĂM': 'THỨ NĂM',
+            'THỨ SÁU': 'THỨ SÁU',
+            'THỨ BẢY': 'THỨ BẢY',
+            'CHỦ NHẬT': 'CHỦ NHẬT'
+        };
+        return `${vietnameseDaysOfWeek[dayOfWeek]}, ${day} THÁNG ${month} NĂM ${year}`;
     };
-
-    const [activeIndex, setActiveIndex] = useState(0);
-    moment.locale('vi'); // Set the locale to Vietnamese
-
     const formatVietnamDate = (utcDate: string) => {
         const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
         return vietnamDate.fromNow();
@@ -444,7 +443,20 @@ const HomeScreen = ({ navigation }: any) => {
                                     ) : null}
                                 </View>
                             </View>
-                            <Image source={AppImage.share} style={styles.shareIcon} />
+                            <View style={{
+                                marginTop: 15,
+                                marginRight: 5,
+                                zIndex: 1,
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                width: PAGE_WIDTH * 0.09,
+                                height: 36
+                            }}>
+                                <TouchableOpacity>
+                                    <Image source={AppImage.share} style={styles.shareIcon} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     ))}
                 </ScrollView>

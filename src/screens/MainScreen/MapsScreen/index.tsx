@@ -38,7 +38,7 @@ const MapsScreen = ({ navigation }: any) => {
     bottomSheetOpen: false,
     hasOpenedOnce: false,
     bottomSheetMoreOpen: false,
-})
+  })
 
   const PAGE_WIDTH = Dimensions.get('window').width;
   const PAGE_HEIGHT = Dimensions.get('window').height;
@@ -73,11 +73,10 @@ const MapsScreen = ({ navigation }: any) => {
   const [suggestedEvent, setSuggestedEvent] = useState([]);
   const [pressedQuanTam, setPressedQuanTam] = useState(false);
   const [pressedSeThamGia, setPressedSeThamGia] = useState(false);
-  const [eventIds, setEventIds] = useState(null);
   const [toggleLocationSaved, seTtoggleLocationSaved] = useState<boolean>(false);
   const [locationSaveID, setLocationSaveID] = useState(null);
 
-  const handleShowModalEvent = async (eventId: any) => {
+  const handleShowModalEvent = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const [eventResponse, suggestedResponse] = await Promise.all([
@@ -91,8 +90,6 @@ const MapsScreen = ({ navigation }: any) => {
       setEventDetails(eventResponse.data.event);
       setSuggestedEvent(suggestedResponse.data.events);
       setSelectedOption((prev) => ({ ...prev, showModalEvent: true }));
-      setEventIds(eventId);
-      console.log('id:',eventId);
     } catch (error: any) {
       console.error('Error fetching event details or suggested events:', error.message);
     }
@@ -101,11 +98,11 @@ const MapsScreen = ({ navigation }: any) => {
   useEffect(() => {
     const fetchPressedStates = async () => {
       try {
-        const quanTamValue = await AsyncStorage.getItem(`pressedQuanTam${eventIds}`);
+        const quanTamValue = await AsyncStorage.getItem(`pressedQuanTam${eventId}`);
         if (quanTamValue !== null) {
           setPressedQuanTam(JSON.parse(quanTamValue));
         }
-        const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${eventIds}`);
+        const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${eventId}`);
         if (seThamGiaValue !== null) {
           setPressedSeThamGia(JSON.parse(seThamGiaValue));
         }
@@ -114,16 +111,16 @@ const MapsScreen = ({ navigation }: any) => {
       }
     };
 
-    if (eventIds !== null) {
+    if (eventId !== null) {
       fetchPressedStates();
     }
-  }, [eventIds]);
+  });
 
   const handleQuanTamPress = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const response = await axios.post(
-        `http://192.53.172.131:1050/home/toggleInterestEvent/${eventIds}`,
+        `http://192.53.172.131:1050/home/toggleInterestEvent/${eventId}`,
         {},
         {
           headers: {
@@ -136,7 +133,7 @@ const MapsScreen = ({ navigation }: any) => {
       console.log('Toggle pressedQuanTam Result:', result);
       if (result.isInterested !== undefined) {
         setPressedQuanTam(result.isInterested);
-        await AsyncStorage.setItem(`pressedQuanTam${eventIds}`, JSON.stringify(result.isInterested));
+        await AsyncStorage.setItem(`pressedQuanTam${eventId}`, JSON.stringify(result.isInterested));
       } else {
         console.error('Invalid toggleInterestEvent response:', result);
       }
@@ -149,7 +146,7 @@ const MapsScreen = ({ navigation }: any) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const response = await axios.post(
-        `http://192.53.172.131:1050/home/toggleParticipantEvent/${eventIds}`,
+        `http://192.53.172.131:1050/home/toggleParticipantEvent/${eventId}`,
         {},
         {
           headers: {
@@ -162,7 +159,7 @@ const MapsScreen = ({ navigation }: any) => {
       console.log('Toggle pressedSeThamGia Result:', result);
       if (result.isInterested !== undefined) {
         setPressedSeThamGia(result.isInterested);
-        await AsyncStorage.setItem(`pressedSeThamGia${eventIds}`, JSON.stringify(result.isInterested));
+        await AsyncStorage.setItem(`pressedSeThamGia${eventId}`, JSON.stringify(result.isInterested));
       } else {
         console.error('Invalid toggleParticipantEvent response:', result);
       }
@@ -257,7 +254,7 @@ const MapsScreen = ({ navigation }: any) => {
   const [locations, setLocations] = useState<any | []>([]);
   const [maps, setMaps] = useState<any[]>([]);
   const [numberMaps, setNumberMaps] = useState<any>([])
-  const [eventNews, setEventNews] = useState([]);
+  const [eventNews, setEventNews] = useState<any>([]);
   const [position, setPosition] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const handleShareLocation = async () => {
@@ -307,6 +304,7 @@ const MapsScreen = ({ navigation }: any) => {
     }
   };
 
+  const [eventId, setEventId] = useState<string | null>(null);
   const fetchEventNews = async (latitude: number, longitude: number) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken')
@@ -319,6 +317,9 @@ const MapsScreen = ({ navigation }: any) => {
         }
       });
       setEventNews(response.data.events);
+      if (response.data.events.length > 0) {
+        setEventId(response.data.events[0].id);
+      }
     } catch (error: any) {
       console.error('Error fetching events :', error.message);
     }
@@ -329,16 +330,17 @@ const MapsScreen = ({ navigation }: any) => {
     return today.toISOString().split('T')[0];
   };
 
-  moment.locale('vi'); // Set the locale to Vietnamese
+  moment.locale('vi');
 
   const formatVietnamDate = (utcDate: string) => {
     const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
     return vietnamDate.fromNow();
   };
 
+  moment.locale('en');
   const formatVietnamDateMore = (utcDate: any) => {
     const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
-    const daysOfWeek: any = {
+    const daysOfWeek: any= {
       'Sunday': 'CHỦ NHẬT',
       'Monday': 'THỨ HAI',
       'Tuesday': 'THỨ BA',
@@ -347,9 +349,10 @@ const MapsScreen = ({ navigation }: any) => {
       'Friday': 'THỨ SÁU',
       'Saturday': 'THỨ BẢY'
     };
-    const dayOfWeek = daysOfWeek[vietnamDate.format('dddd')];
+    const englishDayOfWeek = vietnamDate.format('dddd');
+    const dayOfWeek = daysOfWeek[englishDayOfWeek];
     const day = vietnamDate.date();
-    const month = vietnamDate.month() + 1; // month() is zero-based, so we add 1
+    const month = vietnamDate.month() + 1;
     const year = vietnamDate.year();
     return `${dayOfWeek}, ${day} THÁNG ${month} NĂM ${year}`;
   };
@@ -383,7 +386,6 @@ const MapsScreen = ({ navigation }: any) => {
       }
     )
     setUserAvatar(response.data)
-    console.log(response.data)
   }
 
   useEffect(() => {
@@ -579,8 +581,8 @@ const MapsScreen = ({ navigation }: any) => {
                     <Text style={styles.openingTime}>
                       {' · '}
                       {currentTime.isBetween(moment(item.openingHours.monday.open, 'HH:mm'), moment(item.openingHours.monday.close, 'HH:mm'), null, '[)') ?
-                        `Mở cửa lúc ${item.openingHours.monday.open}` :
-                        `Đóng cửa lúc ${item.openingHours.monday.close}`
+                        `Đóng cửa lúc ${item.openingHours.monday.close}` :
+                        `Mở cửa lúc ${item.openingHours.monday.open}`
                       }
                     </Text>
                   </View>
@@ -620,9 +622,7 @@ const MapsScreen = ({ navigation }: any) => {
                   <TouchableOpacity
                     style={{ zIndex: 99 }}
                     onPress={() => {
-                      const eventId = item.id;
-                      console.log('item:',eventId)
-                      handleShowModalEvent(eventId);
+                      handleShowModalEvent();
                     }}>
                     <Text style={styles.title_event1} numberOfLines={2}>{item?.nameEvent}</Text>
                   </TouchableOpacity>
@@ -705,7 +705,7 @@ const MapsScreen = ({ navigation }: any) => {
                       <Text style={{ marginRight: 21, fontWeight: '700', fontSize: 16, color: 'rgba(231, 79, 177, 1)' }}>{item.distance} Km</Text>
                     </TouchableOpacity>
                   </View>
-                  <View key={index} style={[styles.locationContainer, { marginHorizontal: 20 }]}>
+                  <View style={[styles.locationContainer, { marginHorizontal: 20 }]}>
                     <View style={styles.openingHoursContainer}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={[styles.openingStatus, { color: currentTime.isBetween(moment(item.openingHours.monday.open, 'HH:mm'), moment(item.openingHours.monday.close, 'HH:mm'), null, '[)') ? '#504099' : 'red' }]}>
@@ -713,7 +713,10 @@ const MapsScreen = ({ navigation }: any) => {
                         </Text>
                         <Text style={styles.openingTime}>
                           {' · '}
-                          Mở cửa lúc {item.openingHours.monday.open}
+                          {currentTime.isBetween(moment(item.openingHours.monday.open, 'HH:mm'), moment(item.openingHours.monday.close, 'HH:mm'), null, '[)') ?
+                            `Đóng cửa lúc ${item.openingHours.monday.close}` :
+                            `Mở cửa lúc ${item.openingHours.monday.open}`
+                          }
                         </Text>
                       </View>
                     </View>
@@ -835,7 +838,7 @@ const MapsScreen = ({ navigation }: any) => {
                       </View>
                     </View>
                     <View>
-                      <Text style={styles.title_text}>{eventDetails?.descriptionSections[0]?.title}</Text>
+                      <Text style={styles.title_text}>1.{eventDetails?.descriptionSections[0]?.title}</Text>
                       <ReadMore numberOfLines={3}
                         animate={true}
                         expandOnly={true}
@@ -847,7 +850,7 @@ const MapsScreen = ({ navigation }: any) => {
                       </ReadMore>
                     </View>
                     <View style={{ marginTop: 15 }}>
-                      <Text style={styles.title_text}>{eventDetails?.descriptionSections[1]?.title}</Text>
+                      <Text style={styles.title_text}>2.{eventDetails?.descriptionSections[1]?.title}</Text>
                       <ReadMore numberOfLines={5}
                         animate={true}
                         expandOnly={true}
@@ -1022,8 +1025,8 @@ const MapsScreen = ({ navigation }: any) => {
                     <Text style={styles.openingTime}>
                       {' · '}
                       {currentTime.isBetween(moment(locations.openingHours.monday.open, 'HH:mm'), moment(locations.openingHours.monday.close, 'HH:mm'), null, '[)') ?
-                        `Mở cửa lúc ${locations.openingHours.monday.open}` :
-                        `Đóng cửa lúc ${locations.openingHours.monday.close}`
+                        `Đóng cửa lúc ${locations.openingHours.monday.close}` :
+                        `Mở cửa lúc ${locations.openingHours.monday.open}`
                       }
                     </Text>
                   </View>

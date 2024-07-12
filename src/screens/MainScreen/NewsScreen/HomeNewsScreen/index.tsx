@@ -1,4 +1,5 @@
 import axios from "axios";
+import moment from "moment";
 import React, { useEffect, useState } from "react"
 import { Dimensions, FlatList, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native"
 import styles from "~screens/MainScreen/NewsScreen/HomeNewsScreen/styles";
@@ -10,16 +11,16 @@ const HomeNewsScreen = ({ navigation }: any) => {
     const PAGE_HEIGHT = Dimensions.get('window').height;
     const hashtagColors = ['rgba(171, 81, 228, 1)', 'rgba(114, 46, 209, 1)', 'rgba(105, 24, 165, 1)', 'rgba(74, 10, 120, 1)', 'rgba(49, 0, 84, 1)'];
 
-    const [toptrending, setToptrendinh] = useState([]);
+    const [toptrending, setToptrending] = useState([]);
     useEffect(() => {
         const fetchNews = async () => {
             try {
                 const response = await axios.get('http://192.53.172.131:1050/news/trending-news');
-                setToptrendinh(response.data.newsInfo);
-                console.log(response.data.newsInfo.coverImage)
+                setToptrending(response.data.newsInfo);
+                console.log(response.data.newsInfo)
             }
             catch (error: any) {
-                console.error('Error fetching News :', error.message)
+                console.error('Error fetchingTopTrending News :', error.message)
             }
         };
         fetchNews();
@@ -33,7 +34,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                 setHeight(response.data.newsInfo);
             }
             catch (error: any) {
-                console.error('Error fetching News :', error.message)
+                console.error('Error fetchingheight News :', error.message)
             }
         };
         fetchNews();
@@ -47,7 +48,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                 setNutritious(response.data.newsInfo);
             }
             catch (error: any) {
-                console.error('Error fetching News :', error.message)
+                console.error('Error fetchingnutritious News :', error.message)
             }
         };
         fetchNews();
@@ -61,7 +62,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                 setPractice(response.data.newsInfo);
             }
             catch (error: any) {
-                console.error('Error fetching News :', error.message)
+                console.error('Error fetchingpractice News :', error.message)
             }
         };
         fetchNews();
@@ -75,7 +76,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                 setHomenews(response.data.newsInfo);
             }
             catch (error: any) {
-                console.error('Error fetching News :', error.message)
+                console.error('Error fetchinghomenews News :', error.message)
             }
         };
         fetchNews();
@@ -89,6 +90,12 @@ const HomeNewsScreen = ({ navigation }: any) => {
             </TouchableOpacity>
         </View>
     );
+
+    const formatVietnamDate = (utcDate: string): string => {
+        const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
+        const formattedDate = vietnamDate.format('DD/MM/YYYY');
+        return formattedDate;
+    };
 
     return (
 
@@ -107,11 +114,9 @@ const HomeNewsScreen = ({ navigation }: any) => {
                         showsHorizontalScrollIndicator={false}>
                         {toptrending.slice(0, 5).map((item: any, index: any) => (
                             <View key={index} style={styles.from_eventTop}>
-                                {item.coverImage.slice(0, 1).map((images: any, index: any) => (
-                                    <View key={index} style={{ width: PAGE_WIDTH * 0.75, height: PAGE_HEIGHT * 0.22 }}>
-                                        <Image source={{ uri: images }} style={styles.background_envent} />
-                                    </View>
-                                ))}
+                                <View style={{ width: PAGE_WIDTH * 0.75, height: PAGE_HEIGHT * 0.22 }}>
+                                    <Image source={{ uri: item.coverImage }} style={styles.background_envent} />
+                                </View>
                                 <View style={{ marginTop: 8, flexDirection: 'row' }}>
                                     {item.topic.slice(0, 3).map((topic: any, idx: any) => (
                                         <View key={idx} style={[styles.hastag1, { backgroundColor: hashtagColors[idx % hashtagColors.length] }]}>
@@ -125,7 +130,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                                 <View style={styles.footerEvent}>
                                     <View style={{ flexDirection: 'row' }}>
                                         <Image source={AppImage.date} style={{ marginRight: 5 }} />
-                                        <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{item.createdAt}</Text>
+                                        <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
                                     </View>
                                     <View style={{ flexDirection: 'row' }}>
                                         <Image source={AppImage.userIcon} style={{ width: 16, height: 16, marginRight: 5 }} />
@@ -143,13 +148,11 @@ const HomeNewsScreen = ({ navigation }: any) => {
                 <Text style={{ fontWeight: '600', fontSize: 20, lineHeight: 25, color: 'rgba(30, 30, 30, 1)' }}>Chiều cao</Text>
                 {height.slice(0, 1).map((item: any, index: any) => (
                     <View key={index} style={styles.from_eventTop1}>
-                        {item.coverImage.slice(0, 1).map((images: any, index: any) => (
-                            <Image key={index} source={{ uri: images }} style={{
-                                height: PAGE_HEIGHT * 0.25,
-                                width: PAGE_WIDTH * 0.88,
-                                borderRadius: 8,
-                            }} />
-                        ))}
+                        <Image source={{ uri: item.coverImage }} style={{
+                            height: PAGE_HEIGHT * 0.25,
+                            width: PAGE_WIDTH * 0.88,
+                            borderRadius: 8,
+                        }} />
                         <View style={{ marginTop: 8, flexDirection: 'row' }}>
                             {item.topic.slice(0, 3).map((topic: any, idx: any) => (
                                 <View key={idx} style={[styles.hastag1, { backgroundColor: hashtagColors[idx % hashtagColors.length] }]}>
@@ -163,7 +166,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                         <View style={styles.footerEvent}>
                             <View style={{ flexDirection: 'row' }}>
                                 <Image source={AppImage.date} style={{ marginRight: 5 }} />
-                                <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{item.createdAt}</Text>
+                                <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
                             </View>
                             <View style={{ flexDirection: 'row' }}>
                                 <Image source={AppImage.userIcon} style={{ width: 16, height: 16, marginRight: 5 }} />
@@ -186,13 +189,11 @@ const HomeNewsScreen = ({ navigation }: any) => {
                 <Text style={{ fontWeight: '600', fontSize: 20, lineHeight: 25, color: 'rgba(30, 30, 30, 1)' }}>Dinh dưỡng</Text>
                 {nutritious.slice(0, 1).map((item: any, index: any) => (
                     <View key={index} style={styles.from_eventTop1}>
-                        {item.coverImage.slice(0, 1).map((images: any, index: any) => (
-                            <Image key={index} source={{ uri: images }} style={{
-                                height: PAGE_HEIGHT * 0.25,
-                                width: PAGE_WIDTH * 0.88,
-                                borderRadius: 8,
-                            }} />
-                        ))}
+                        <Image source={{ uri: item.coverImage }} style={{
+                            height: PAGE_HEIGHT * 0.25,
+                            width: PAGE_WIDTH * 0.88,
+                            borderRadius: 8,
+                        }} />
                         <View style={{ marginTop: 8, flexDirection: 'row' }}>
                             {item.topic.slice(0, 3).map((topic: any, idx: any) => (
                                 <View key={idx} style={[styles.hastag1, { backgroundColor: hashtagColors[idx % hashtagColors.length] }]}>
@@ -206,7 +207,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                         <View style={styles.footerEvent}>
                             <View style={{ flexDirection: 'row' }}>
                                 <Image source={AppImage.date} style={{ marginRight: 5 }} />
-                                <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{item.createdAt}</Text>
+                                <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
                             </View>
                             <View style={{ flexDirection: 'row' }}>
                                 <Image source={AppImage.userIcon} style={{ width: 16, height: 16, marginRight: 5 }} />
@@ -229,13 +230,11 @@ const HomeNewsScreen = ({ navigation }: any) => {
                 <Text style={{ fontWeight: '600', fontSize: 20, lineHeight: 25, color: 'rgba(30, 30, 30, 1)' }}>Luyện tập</Text>
                 {practice.slice(0, 1).map((item: any, index: any) => (
                     <View key={index} style={styles.from_eventTop1}>
-                        {item.coverImage.slice(0, 1).map((images: any, index: any) => (
-                            <Image key={index} source={{ uri: images }} style={{
-                                height: PAGE_HEIGHT * 0.25,
-                                width: PAGE_WIDTH * 0.88,
-                                borderRadius: 8,
-                            }} />
-                        ))}
+                        <Image key={index} source={{ uri: item.coverImage }} style={{
+                            height: PAGE_HEIGHT * 0.25,
+                            width: PAGE_WIDTH * 0.88,
+                            borderRadius: 8,
+                        }} />
                         <View style={{ marginTop: 8, flexDirection: 'row' }}>
                             {item.topic.slice(0, 3).map((topic: any, idx: any) => (
                                 <View key={idx} style={[styles.hastag1, { backgroundColor: hashtagColors[idx % hashtagColors.length] }]}>
@@ -249,7 +248,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                         <View style={styles.footerEvent}>
                             <View style={{ flexDirection: 'row' }}>
                                 <Image source={AppImage.date} style={{ marginRight: 5 }} />
-                                <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{item.createdAt}</Text>
+                                <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
                             </View>
                             <View style={{ flexDirection: 'row' }}>
                                 <Image source={AppImage.userIcon} style={{ width: 16, height: 16, marginRight: 5 }} />
@@ -272,9 +271,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                 <Text style={styles.header_heading}>Tin mới</Text>
                 {homenews.slice(0, 10).map((item: any, index: any) => (
                     <View key={index} style={styles.fromEventNew}>
-                        {item.coverImage.slice(0, 1).map((images: any, index: any) => (
-                            <Image key={index} source={{ uri: images }} style={{ width: PAGE_WIDTH * 0.4, height: PAGE_HEIGHT * 0.13, borderRadius: 8 }} />
-                        ))}
+                        <Image source={{ uri: item.coverImage }} style={{ width: PAGE_WIDTH * 0.4, height: PAGE_HEIGHT * 0.13, borderRadius: 8 }} />
                         <View style={{ width: PAGE_WIDTH * 0.5 }}>
                             <TouchableOpacity style={{ flexGrow: 1 }} onPress={() => navigation.navigate('DetailsNewsScreen', { item })}>
                                 <Text numberOfLines={4} style={styles.titleEvent2}>{item.title}</Text>
@@ -282,7 +279,7 @@ const HomeNewsScreen = ({ navigation }: any) => {
                             <View style={{ flexDirection: 'row', marginLeft: 20, marginTop: 'auto' }}>
                                 <View style={{ flexDirection: 'row', marginTop: 'auto' }}>
                                     <Image source={AppImage.date} style={{ marginRight: 5 }} />
-                                    <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{item.createdAt}</Text>
+                                    <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
                                 </View>
                             </View>
                         </View>

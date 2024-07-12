@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DetailsEventScreen = ({ navigation, route }: any) => {
     const { item } = route.params;
-    // console.log('item:', item)
+    const [eventId, setEventId] = useState(null);
     const [event, setEvent] = useState({
         id: '',
         image: '',
@@ -43,11 +43,11 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
     useEffect(() => {
         const fetchPressedStates = async () => {
             try {
-                const quanTamValue = await AsyncStorage.getItem(`pressedQuanTam${item.id}`);
+                const quanTamValue = await AsyncStorage.getItem(`pressedQuanTam${eventId}`);
                 if (quanTamValue !== null) {
                     setPressedQuanTam(JSON.parse(quanTamValue));
                 }
-                const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${item.id}`);
+                const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${eventId}`);
                 if (seThamGiaValue !== null) {
                     setPressedSeThamGia(JSON.parse(seThamGiaValue));
                 }
@@ -57,14 +57,15 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
         };
 
         fetchPressedStates();
-    }, [item.id]);
+    }, [eventId]);
 
     const [pressedQuanTam, setPressedQuanTam] = useState(false);
     const handleQuanTamPress = async () => {
         try {
             const accessToken = await AsyncStorage.getItem('accessToken')
             const response = await axios.post(
-                `http://192.53.172.131:1050/home/toggleInterestEvent/${item.id}`,
+                `http://192.53.172.131:1050/home/toggleInterestEvent/${eventId}`,
+                {},
                 {
                     headers: {
                         'Content-Type': 'application/json',
@@ -76,7 +77,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
             console.log('Toggle pressedQuanTam Result:', result);
             if (result.isInterested !== undefined) {
                 setPressedQuanTam(result.isInterested);
-                await AsyncStorage.setItem(`pressedQuanTam${item.id}`, JSON.stringify(result.isInterested));
+                await AsyncStorage.setItem(`pressedQuanTam${eventId}`, JSON.stringify(result.isInterested));
             } else {
                 console.error('Invalid toggleInterestEvent response:', result);
             }
@@ -89,7 +90,8 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
         try {
             const accessToken = await AsyncStorage.getItem('accessToken')
             const response = await axios.post(
-                `http://192.53.172.131:1050/home/toggleParticipantEvent/${item.id}`,
+                `http://192.53.172.131:1050/home/toggleParticipantEvent/${eventId}`,
+                {},
                 {
                     headers: {
                         'Content-Type': 'application/json',
@@ -101,7 +103,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
             console.log('Toggle pressedSeThamGia Result:', result);
             if (result.isInterested !== undefined) {
                 setPressedSeThamGia(result.isInterested);
-                await AsyncStorage.setItem(`pressedSeThamGia${item.id}`, JSON.stringify(result.isInterested));
+                await AsyncStorage.setItem(`pressedSeThamGia${eventId}`, JSON.stringify(result.isInterested));
             } else {
                 console.error('Invalid toggleParticipantEvent response:', result);
             }
@@ -118,6 +120,8 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
                     const fetchedEvent = response.data.event;
                     setEvent(fetchedEvent);
                     setPressedSeThamGia(fetchedEvent.isInterested);
+                    const eventId = item.id;
+                    setEventId(eventId)
                     await AsyncStorage.setItem('pressedSeThamGia', JSON.stringify(fetchedEvent.isInterested));
                 } else {
                     console.error('Invalid response structure', response.data);
@@ -132,7 +136,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${item.id}`);
+                const response = await axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${eventId}`);
                 if (response.data && response.data.events) {
                     setSuggestedEvent(response.data.events);
                 } else {
@@ -145,8 +149,9 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
         };
 
         fetchEvents();
-    }, [item.id]);
+    }, [eventId]);
 
+    moment.locale('en');
     const formatVietnamDate = (utcDate: any) => {
         const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
         const daysOfWeek: any = {
@@ -158,9 +163,10 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
             'Friday': 'THỨ SÁU',
             'Saturday': 'THỨ BẢY'
         };
-        const dayOfWeek = daysOfWeek[vietnamDate.format('dddd')];
+        const englishDayOfWeek = vietnamDate.format('dddd');
+        const dayOfWeek = daysOfWeek[englishDayOfWeek];
         const day = vietnamDate.date();
-        const month = vietnamDate.month() + 1; // month() is zero-based, so we add 1
+        const month = vietnamDate.month() + 1;
         const year = vietnamDate.year();
         return `${dayOfWeek}, ${day} THÁNG ${month} NĂM ${year}`;
     };
@@ -260,7 +266,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
                                 </View>
                             </View>
                             <View>
-                                <Text style={styles.title_text}>{event.descriptionSections[0]?.title}</Text>
+                                <Text style={styles.title_text}>1.{event.descriptionSections[0]?.title}</Text>
                                 <ReadMore numberOfLines={3}
                                     animate={true}
                                     expandOnly={true}
@@ -272,7 +278,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
                                 </ReadMore>
                             </View>
                             <View style={{ marginTop: 15 }}>
-                                <Text style={styles.title_text}>{event.descriptionSections[1]?.title}</Text>
+                                <Text style={styles.title_text}>2.{event.descriptionSections[1]?.title}</Text>
                                 <ReadMore numberOfLines={5}
                                     animate={true}
                                     expandOnly={true}
