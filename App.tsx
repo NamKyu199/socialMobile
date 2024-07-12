@@ -26,6 +26,12 @@ import QuestionComment from "~screens/MainScreen/CommunityScreen/QuestionDetailS
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityIndicator, View } from "react-native";
 import EditProfile from "~screens/MainScreen/ProfileScreen/EditProfile";
+import GeneralInformation from "~screens/MainScreen/ProfileScreen/EditProfile/GeneralInformation";
+import Education from "~screens/MainScreen/ProfileScreen/EditProfile/Education";
+import Story from "~screens/MainScreen/ProfileScreen/EditProfile/Story";
+import Experience from "~screens/MainScreen/ProfileScreen/EditProfile/Experience";
+import Certificate from "~screens/MainScreen/ProfileScreen/EditProfile/Certificate";
+import Achievements from "~screens/MainScreen/ProfileScreen/EditProfile/Achievements";
 
 const App = () => {
   const Stack = createNativeStackNavigator();
@@ -83,6 +89,12 @@ const App = () => {
             <Stack.Screen name="EvaluateScreen" component={EvaluateScreen} />
             <Stack.Screen name="QuestionComment" component={QuestionComment} />
             <Stack.Screen name="EditProfile" component={EditProfile} />
+            <Stack.Screen name="GeneralInformation" component={GeneralInformation} />
+            <Stack.Screen name="Story" component={Story} />
+            <Stack.Screen name="Education" component={Education} />
+            <Stack.Screen name="Experience" component={Experience} />
+            <Stack.Screen name="Certificate" component={Certificate} />
+            <Stack.Screen name="Achievements" component={Achievements} />
           </Stack.Navigator>
         </NavigationContainer>
       </BottomSheetModalProvider>

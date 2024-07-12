@@ -70,8 +70,8 @@ const LoginScreen = ({ navigation }: any) => {
             view={
                 <Formik
                     initialValues={{
-                        username: 'quanggiapdo@gmail.com',
-                        password: '12345678',
+                        username: 'namkyu@gmail.com',
+                        password: '123456789',
                     }}
                     onSubmit={(value, { setFieldTouched }) => {
                         setFieldTouched(usernameField, true)

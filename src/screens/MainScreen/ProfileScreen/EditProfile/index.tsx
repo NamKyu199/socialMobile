@@ -1,16 +1,43 @@
-import { ArrowLeft2, Briefcase, Cake, Call, Edit2, Map1, ProfileCircle, Sms } from "iconsax-react-native";
-import React from "react";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import axios from "axios";
+import { Briefcase, Cake, Call, Edit2, Map1, ProfileCircle, Sms } from "iconsax-react-native";
+import React, { useCallback, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import HeaderEditProfile from "~component/HeaderEditProfile";
+import { InformationModel } from "~models/InformationModel";
+import { BASE_URL } from "~services/ApiBaseUrl";
 import { PlusCirclePink } from "~utils/images/svg";
 
 const EditProfile = ({ navigation }: any) => {
+    const [informationData, setInformationData] = useState<InformationModel>();
+
+    const fetchInformation = async () => {
+        const accessToken = await AsyncStorage.getItem('accessToken')
+        const response = await axios.get(`${BASE_URL}profile/getInformation`,
+            {
+                headers: {
+                    'Authorization': accessToken
+                }
+            }
+        )
+        setInformationData(response.data.getUserInfo)
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchInformation();
+        }, [informationData])
+    );
+
     const info = [
-        { id: 1, Icon: ProfileCircle, label: 'Man Van Truong' },
-        { id: 2, Icon: Call, label: '0942328562' },
-        { id: 3, Icon: Sms, label: 'abcd@gmail.com' },
-        { id: 4, Icon: Cake, label: 'Ngày sinh' },
-        { id: 5, Icon: Briefcase, label: 'Công việc' },
-        { id: 6, Icon: Map1, label: 'Địa chỉ hiện tại' }
+        { id: 1, Icon: ProfileCircle, fontWeight: '500', label: informationData?.fullName, color: 'rgba(30, 30, 30, 1)'},
+        { id: 2, Icon: Call, fontWeight: '500', label: informationData?.phoneNumber, color: 'rgba(30, 30, 30, 1)' },
+        { id: 3, Icon: Sms, fontWeight: '500', label: informationData?.email, color: 'rgba(30, 30, 30, 1)' },
+        { id: 4, Icon: Cake, fontWeight: informationData?.dateOfBirth !== null ? '500' : '400', label: informationData?.dateOfBirth ?? 'Ngày sinh', color: informationData?.dateOfBirth !== null ? 'rgba(30, 30, 30, 1)' : 'rgba(166, 166, 166, 1)' },
+        { id: 5, Icon: Briefcase, fontWeight: informationData?.dateOfBirth !== null ? '500' : '400', label: informationData?.jobType ?? 'Công việc', color: informationData?.dateOfBirth !== null ? 'rgba(30, 30, 30, 1)' : 'rgba(166, 166, 166, 1)' },
+        { id: 6, Icon: Map1, fontWeight: informationData?.dateOfBirth !== null ? '500' : '400', label: informationData?.currentAddress ?? 'Địa chỉ hiện tại', color: informationData?.dateOfBirth !== null ? 'rgba(30, 30, 30, 1)' : 'rgba(166, 166, 166, 1)'}
     ];
 
     const view = [
@@ -18,11 +45,13 @@ const EditProfile = ({ navigation }: any) => {
             id: 1,
             title: 'Thông tin chung',
             edit: 'Chỉnh sửa',
-            action: () => navigation.navigate('GeneralInformation'),
-            content: info.map(({ id, Icon, label }) => (
+            action: () => navigation.navigate('GeneralInformation', {informationData: informationData}),
+            content: info.map(({ id, Icon, fontWeight, label, color }) => (
                 <View key={id} style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Icon size={20} color="rgba(114, 46, 209, 1)" />
-                    <Text style={{ fontSize: 16, fontWeight: '500', lineHeight: 24, marginLeft: 14, marginVertical: 14 }}>{label}</Text>
+                    <Text style={{ fontSize: 16, fontWeight: fontWeight as '400' | '500', lineHeight: 24, marginLeft: 14, marginVertical: 14, color: color }}>
+                        {label}
+                    </Text>
                 </View>
             )),
             line:
@@ -32,12 +61,16 @@ const EditProfile = ({ navigation }: any) => {
             id: 2,
             title: 'Tiểu sử',
             edit: 'Chỉnh sửa',
+            action: () => navigation.navigate('Story'),
             content:
-                <View style={{ borderWidth: 1, borderRadius: 8, borderColor: 'rgba(221, 221, 221, 1)', marginVertical: 14 }}>
+                <TouchableOpacity
+                    style={{ borderWidth: 1, borderRadius: 8, borderColor: 'rgba(221, 221, 221, 1)', marginVertical: 14 }}
+                    onPress={() => navigation.navigate('Story')}
+                >
                     <Text style={{ fontSize: 16, fontWeight: '400', lineHeight: 24, marginHorizontal: 8, marginVertical: 12, color: 'rgba(166, 166, 166, 1)' }}>
                         Nhập tiểu sử
                     </Text>
-                </View>,
+                </TouchableOpacity>,
             line:
                 <View style={{ borderWidth: 0.4, borderColor: 'rgba(215, 215, 215, 1)', marginTop: 10 }} />
         },
@@ -45,14 +78,18 @@ const EditProfile = ({ navigation }: any) => {
             id: 3,
             title: 'Học vấn',
             edit: 'Chỉnh sửa',
+            action: () => navigation.navigate('Education'),
             content:
-                <View style={{ marginVertical: 14 }}>
-                    <View style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 16, borderColor: 'rgba(231, 79, 177, 1)', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}>
+                <View style={{ marginVertical: 14, flexWrap: 'wrap' }}>
+                    <TouchableOpacity
+                        style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 16, borderColor: 'rgba(231, 79, 177, 1)', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}
+                        onPress={() => navigation.navigate('Education')}
+                    >
                         <PlusCirclePink fill={'rgba(231, 79, 177, 1)'} />
                         <Text style={{ fontSize: 12, fontWeight: '400', lineHeight: 14.06, color: 'rgba(231, 79, 177, 1)', marginLeft: 4 }}>
                             Thêm trường học
                         </Text>
-                    </View>
+                    </TouchableOpacity>
                 </View>,
             line:
                 <View style={{ borderWidth: 0.4, borderColor: 'rgba(215, 215, 215, 1)', marginTop: 10 }} />
@@ -61,13 +98,19 @@ const EditProfile = ({ navigation }: any) => {
             id: 4,
             title: 'Kinh nghiệm làm việc',
             edit: 'Chỉnh sửa',
+            action: () => navigation.navigate('Experience'),
             content:
                 <View style={{ marginVertical: 14 }}>
-                    <View style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 16, borderColor: 'rgba(231, 79, 177, 1)', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}>
-                        <PlusCirclePink fill={'rgba(231, 79, 177, 1)'} />
-                        <Text style={{ fontSize: 12, fontWeight: '400', lineHeight: 14.06, color: 'rgba(231, 79, 177, 1)', marginLeft: 4 }}>
-                            Thêm kinh nghiệm làm việc
-                        </Text>
+                    <View style={{ flexWrap: 'wrap' }}>
+                        <TouchableOpacity
+                            style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 16, borderColor: 'rgba(231, 79, 177, 1)', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}
+                            onPress={() => navigation.navigate('Experience')}
+                        >
+                            <PlusCirclePink fill={'rgba(231, 79, 177, 1)'} />
+                            <Text style={{ fontSize: 12, fontWeight: '400', lineHeight: 14.06, color: 'rgba(231, 79, 177, 1)', marginLeft: 4 }}>
+                                Thêm kinh nghiệm làm việc
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
                         <Text style={{ fontSize: 16, fontWeight: '500', lineHeight: 24, color: 'rgba(0, 0, 0, 1)' }}>
@@ -89,13 +132,19 @@ const EditProfile = ({ navigation }: any) => {
             id: 5,
             title: 'Chứng chỉ',
             edit: 'Chỉnh sửa',
+            action: () => navigation.navigate('Certificate'),
             content:
                 <View style={{ marginVertical: 14 }}>
-                    <View style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 16, borderColor: 'rgba(231, 79, 177, 1)', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}>
-                        <PlusCirclePink fill={'rgba(231, 79, 177, 1)'} />
-                        <Text style={{ fontSize: 12, fontWeight: '400', lineHeight: 14.06, color: 'rgba(231, 79, 177, 1)', marginLeft: 4 }}>
-                            Thêm chứng chỉ
-                        </Text>
+                    <View style={{ flexWrap: 'wrap' }}>
+                        <TouchableOpacity
+                            style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 16, borderColor: 'rgba(231, 79, 177, 1)', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}
+                            onPress={() => navigation.navigate('Certificate')}
+                        >
+                            <PlusCirclePink fill={'rgba(231, 79, 177, 1)'} />
+                            <Text style={{ fontSize: 12, fontWeight: '400', lineHeight: 14.06, color: 'rgba(231, 79, 177, 1)', marginLeft: 4 }}>
+                                Thêm chứng chỉ
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
                         <Text style={{ fontSize: 16, fontWeight: '500', lineHeight: 24, color: 'rgba(0, 0, 0, 1)' }}>
@@ -117,13 +166,19 @@ const EditProfile = ({ navigation }: any) => {
             id: 6,
             title: 'Thành tích',
             edit: 'Chỉnh sửa',
+            action: () => navigation.naigate('Achievements'),
             content:
                 <View style={{ marginVertical: 14 }}>
-                    <View style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 16, borderColor: 'rgba(231, 79, 177, 1)', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}>
-                        <PlusCirclePink fill={'rgba(231, 79, 177, 1)'} />
-                        <Text style={{ fontSize: 12, fontWeight: '400', lineHeight: 14.06, color: 'rgba(231, 79, 177, 1)', marginLeft: 4 }}>
-                            Thêm thành tích
-                        </Text>
+                    <View style={{ flexWrap: 'wrap' }}>
+                        <TouchableOpacity
+                            style={{ flexDirection: 'row', borderWidth: 1, borderRadius: 16, borderColor: 'rgba(231, 79, 177, 1)', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}
+                            onPress={() => navigation.navigate('Achievements')}
+                        >
+                            <PlusCirclePink fill={'rgba(231, 79, 177, 1)'} />
+                            <Text style={{ fontSize: 12, fontWeight: '400', lineHeight: 14.06, color: 'rgba(231, 79, 177, 1)', marginLeft: 4 }}>
+                                Thêm thành tích
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
                         <Text style={{ fontSize: 16, fontWeight: '500', lineHeight: 24, color: 'rgba(0, 0, 0, 1)' }}>
@@ -145,16 +200,10 @@ const EditProfile = ({ navigation }: any) => {
     const handlePress = (action: any) => {
         action();
     }
+
     return (
         <>
-            <View style={{ backgroundColor: 'rgba(248, 249, 252, 1)', height: 98, borderWidth: 0.4, borderColor: 'rgba(221, 221, 221, 1)' }}>
-                <Text style={{ fontSize: 18, fontWeight: '700', lineHeight: 21.09, textAlign: 'center', marginTop: 54 }}>
-                    Chỉnh sửa thông tin cá nhân
-                </Text>
-                <TouchableOpacity style={{ position: 'absolute', top: 54, left: 16 }} onPress={() => navigation.goBack()}>
-                    <ArrowLeft2 color="rgba(41, 45, 50, 1)" size={24} />
-                </TouchableOpacity>
-            </View>
+            <HeaderEditProfile title='Chỉnh sửa thông tin cá nhân' />
             <ScrollView style={{ backgroundColor: 'rgba(255, 255, 255, 1)', height: '100%' }}>
                 {view.map(({ id, title, edit, action, content, line }) => (
                     <View key={id}>
@@ -176,6 +225,13 @@ const EditProfile = ({ navigation }: any) => {
                 ))}
                 <View style={{ height: 50, backgroundColor: 'rgba(255, 255, 255, 1)' }} />
             </ScrollView>
+            <BottomSheetModal>
+                <BottomSheetView>
+                    <View>
+
+                    </View>
+                </BottomSheetView>
+            </BottomSheetModal>
         </>
     )
 }

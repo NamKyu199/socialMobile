@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { Text, View, TouchableOpacity, ScrollView, Image, TextInput, PermissionsAndroid, Alert, Linking, Dimensions, } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Text, View, TouchableOpacity, ScrollView, Image, TextInput, PermissionsAndroid, Alert, Linking, Dimensions } from "react-native";
 import EvaluateComponent from "~component/EvaluateComponent";
 import AppImage from "~utils/images/app_images";
 import { CameraIcon, Close } from "~utils/images/svg";
 import { launchImageLibrary } from 'react-native-image-picker';
+import axios from "axios";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from "~services/ApiBaseUrl";
 
 const requestLibraryPermission = async () => {
   try {
@@ -19,7 +22,6 @@ const requestLibraryPermission = async () => {
     );
 
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      console.log('Library permission granted');
       return true;
     } else if (granted === PermissionsAndroid.RESULTS.DENIED) {
       console.log('Library permission denied');
@@ -41,12 +43,85 @@ const requestLibraryPermission = async () => {
   return false;
 };
 
-const CreateReviewsScreen = ({ navigation }: any) => {
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [starRating, setStarRating] = useState(0);
-  const [description, setDescription] = useState('');
+const CreateReviewsScreen = ({ navigation, route }: any) => {
   const PAGE_WIDTH = Dimensions.get('window').width;
   const PAGE_HEIGHT = Dimensions.get('window').height;
+  const { id } = route.params;
+  const [imagecomment, setImagecomment] = useState<string | null>(null);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+
+  const [informationData, setInformationData] = useState<any>();
+  const fetchInformation = async () => {
+    const accessToken = await AsyncStorage.getItem('accessToken')
+    const response = await axios.get(`${BASE_URL}profile/getInformation`,
+      {
+        headers: {
+          'Authorization': accessToken
+        }
+      }
+    )
+    setInformationData(response.data.getUserInfo);
+  }
+
+  useEffect(() => {
+    fetchInformation()
+  }, [])
+
+  const [userAvatar, setUserAvatar] = useState<any>('');
+  const fetchAvatar = async () => {
+    const accessToken = await AsyncStorage.getItem('accessToken')
+    const response = await axios.get(`${BASE_URL}profile/getAvatar`,
+      {
+        headers: {
+          'Authorization': accessToken
+        }
+      }
+    )
+    setUserAvatar(response.data)
+  }
+
+  useEffect(() => {
+    fetchAvatar()
+  }, [])
+
+  const submitReview = async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+
+      if (!accessToken) {
+        Alert.alert('Error', 'No authentication token found');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('rating', rating.toString());
+      formData.append('comment', comment);
+
+      if (imagecomment) {
+        formData.append('imagecomment', {
+          uri: imagecomment,
+          type: 'image/jpeg',
+          name: 'review.jpg'
+        });
+      }
+
+      const response = await axios.post(
+        `http://192.53.172.131:1050/map/addReview/${id}`,
+        formData,
+        {
+          headers: {
+            'authorization': accessToken,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      console.log('Review submitted successfully:', response.data);
+      navigation.goBack();
+    } catch (error: any) {
+      console.error('Error submitting review:', error.message);
+    }
+  };
 
   const openImagePicker = async () => {
     const hasPermission = await requestLibraryPermission();
@@ -58,19 +133,16 @@ const CreateReviewsScreen = ({ navigation }: any) => {
       } else if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
       } else {
-        console.log('ImagePicker Response: ', response.assets);
         if (response.assets && response.assets.length > 0) {
-          setSelectedImage(response.assets[0].uri);
+          setImagecomment(response.assets[0].uri);
         }
       }
     });
   };
 
   const handlePostReview = () => {
-    console.log('selectedImage', selectedImage);
-    console.log('starRating', starRating);
-    console.log('description', description)
-  }
+    submitReview();
+  };
 
   return (
     <ScrollView style={{ backgroundColor: '#FFFFFF' }}>
@@ -85,38 +157,38 @@ const CreateReviewsScreen = ({ navigation }: any) => {
         }}>Tạo đánh giá</Text>
         <TouchableOpacity style={{
           backgroundColor: 'rgba(231, 79, 177, 1)', width: 70, height: 35, borderRadius: 4, marginRight: 16
-        }}>
+        }} onPress={handlePostReview}>
           <Text style={{
             color: 'rgba(255, 255, 255, 1)', alignSelf: 'center', marginTop: 6, fontWeight: '600', lineHeight: 20, fontFamily: 'Roboto-Medium'
-          }} onPress={handlePostReview}>Đăng</Text>
+          }}>Đăng</Text>
         </TouchableOpacity>
       </View>
       <View style={{ paddingTop: 20 }}>
         <View style={{ flexDirection: 'row', marginLeft: 20 }}>
-          <Image source={AppImage.avata} style={{ borderRadius: 51, width: 40, height: 40 }} />
+          <Image source={{ uri: userAvatar.avatar }} style={{ borderRadius: 51, width: 40, height: 40 }} />
           <Text style={{
             alignSelf: 'center', marginLeft: 10, fontWeight: '500', fontSize: 14, lineHeight: 17, color: 'rgba(30, 30, 30, 1)', fontFamily: 'Roboto-Medium'
-          }}>Hoàng Thành Nam</Text>
+          }}>{informationData?.fullName}</Text>
         </View>
-        <EvaluateComponent starRating={starRating} setStarRating={setStarRating} />
+        <EvaluateComponent starRating={rating} setStarRating={setRating} />
         <TextInput style={{
           paddingHorizontal: 15, height: 100, borderWidth: 1, borderRadius: 8, borderColor: '#D9D9D9', backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', marginTop: 20, justifyContent: 'space-between', marginHorizontal: 16, fontWeight: '400', fontFamily: 'Roboto-Regular'
         }}
-          value={description}
+          value={comment}
           placeholder='Văn phòng sạch đẹp, thân thiện, đáp ứng công việc'
           multiline
           placeholderTextColor='#00000040'
           textAlignVertical='top'
-          onChangeText={(text) => setDescription(text)}
+          onChangeText={(text) => setComment(text)}
         />
-        {selectedImage && (
-          <Image source={{ uri: selectedImage }} style={{ width: PAGE_WIDTH * 0.92, height: PAGE_HEIGHT * 0.3, marginTop: 20, marginHorizontal: 16, borderRadius: 4 }} />
+        {imagecomment && (
+          <Image source={{ uri: imagecomment }} style={{ width: PAGE_WIDTH * 0.92, height: PAGE_HEIGHT * 0.3, marginTop: 20, marginHorizontal: 16, borderRadius: 4 }} />
         )}
         <TouchableOpacity style={{
           backgroundColor: 'rgba(231, 79, 177, 0.1)', marginTop: 30, height: 40, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', borderRadius: 20, marginHorizontal: 16
         }} onPress={openImagePicker}>
           <CameraIcon />
-          <Text style={{ marginLeft: 2, fontWeight: '600', fontSize: 14, color: 'rgba(231, 79, 177, 1)', fontFamily: 'Roboto-Medium' }}>Thêm ảnh để đánh giá</Text>
+          <Text style={{ marginLeft: 4, fontWeight: '600', fontSize: 14, color: 'rgba(231, 79, 177, 1)', fontFamily: 'Roboto-Medium' }}>Thêm ảnh để đánh giá</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

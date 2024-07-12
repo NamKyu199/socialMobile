@@ -12,6 +12,7 @@ import AppImage from "~utils/images/app_images";
 import { fontFamilies } from "~constant/fontFamilies";
 import LinearGradient from 'react-native-linear-gradient';
 import moment from 'moment-timezone';
+import 'moment/locale/vi';
 
 const HomeScreen = ({ navigation }: any) => {
 
@@ -133,23 +134,6 @@ const HomeScreen = ({ navigation }: any) => {
         height: PAGE_WIDTH * 0.6,
     } as const;
 
-    const renderItem = ({ item, index }: any) => {
-        return (
-            <TouchableWithoutFeedback key={index} onPress={() => handleImagePress(item)}>
-                <View style={styles.imageContainer}>
-                    <Image
-                        style={styles.style_image}
-                        source={{ uri: item.coverImage }}
-                    />
-                    <View style={styles.overlayContainer}>
-                        <Text numberOfLines={2} style={styles.overlayText}>{item.title}</Text>
-                    </View>
-                </View>
-            </TouchableWithoutFeedback>
-        );
-    };
-
-
     const handleImagePress = (item: any) => {
         navigation.navigate('DetailsNewsScreen', { item })
     };
@@ -212,7 +196,7 @@ const HomeScreen = ({ navigation }: any) => {
     const getCurrentDate = () => {
         return moment().tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
     };
-    const formatVietnamDate = (utcDate: any) => {
+    const formatVietnamDateMore = (utcDate: any) => {
         const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
         const daysOfWeek: any = {
             'Sunday': 'CHỦ NHẬT',
@@ -228,6 +212,14 @@ const HomeScreen = ({ navigation }: any) => {
         const month = vietnamDate.month() + 1; // month() is zero-based, so we add 1
         const year = vietnamDate.year();
         return `${dayOfWeek}, ${day} THÁNG ${month} NĂM ${year}`;
+    };
+
+    const [activeIndex, setActiveIndex] = useState(0);
+    moment.locale('vi'); // Set the locale to Vietnamese
+
+    const formatVietnamDate = (utcDate: string) => {
+        const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
+        return vietnamDate.fromNow();
     };
 
     return (
@@ -249,14 +241,61 @@ const HomeScreen = ({ navigation }: any) => {
                         pagingEnabled
                         snapEnabled
                         autoPlay
-                        autoPlayInterval={5000}
-                        onProgressChange={(_, absoluteProgress) =>
-                            (progressValue.value = absoluteProgress)
-                        }
+                        autoPlayInterval={2000}
+                        onProgressChange={(_, absoluteProgress) => {
+                            progressValue.value = absoluteProgress;
+                            setActiveIndex(Math.round(absoluteProgress));
+                        }}
                         mode="parallax"
                         data={toptrending.slice(0, 5)}
-                        renderItem={renderItem}
+                        renderItem={({ item, index }: any) => (
+                            <TouchableWithoutFeedback key={index} onPress={() => handleImagePress(item)}>
+                                <View style={styles.imageContainer}>
+                                    {item.coverImage && item.coverImage ? (
+                                        <Image
+                                            style={styles.style_image}
+                                            source={{ uri: item.coverImage }}
+                                        />
+                                    ) : (
+                                        <Image
+                                            style={styles.style_image}
+                                            source={AppImage.PosterNewsHome}
+                                        />
+                                    )}
+                                    <View style={styles.overlayContainer}>
+                                        <Text numberOfLines={2} style={styles.overlayText}>{item.title}</Text>
+                                    </View>
+                                </View>
+                            </TouchableWithoutFeedback>
+                        )}
                     />
+                </View>
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: 8
+                }}>
+                    {toptrending.slice(0, 5).map((_: any, index: any) => (
+                        <View
+                            key={index}
+                            style={[
+                                activeIndex === index ? {
+                                    width: 32,
+                                    height: 6,
+                                    borderRadius: 4,
+                                    marginRight: 3,
+                                    backgroundColor: '#722ED1',
+                                } : {
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 4,
+                                    marginRight: 3,
+                                    backgroundColor: '#DDDDDD',
+                                }
+                            ]}
+                        />
+                    ))}
                 </View>
             </View>
             {/* Các tin tức đang chú í nhất */}
@@ -396,7 +435,7 @@ const HomeScreen = ({ navigation }: any) => {
                                             </View>
                                             <View style={styles.date_title}>
                                                 <TouchableOpacity style={{ zIndex: 99, flexGrow: 1 }} onPress={() => { navigation.navigate('DetailsEventScreen', { item }) }}>
-                                                    <Text style={{ fontFamily: fontFamilies.back, fontWeight: '700', fontSize: 10, color: '#FFFFFF', marginLeft: 10 }}>{formatVietnamDate(item.startDate)}</Text>
+                                                    <Text style={{ fontFamily: fontFamilies.back, fontWeight: '700', fontSize: 10, color: '#FFFFFF', marginLeft: 10 }}>{formatVietnamDateMore(item.startDate)}</Text>
                                                     <Text style={{ marginLeft: 10, fontWeight: '700', fontSize: 16, color: 'rgba(255, 255, 255, 1)', fontFamily: 'Roboto-Bold' }} numberOfLines={2}>{item.nameEvent}</Text>
                                                     <Text style={styles.interested_participate1}>{item.interestedUsers} người quan tâm - {item.participantUsers} người sẽ tham gia</Text>
                                                 </TouchableOpacity>
@@ -421,7 +460,7 @@ const HomeScreen = ({ navigation }: any) => {
                                 <Image source={AppImage.avatar} />
                                 <View style={{ marginLeft: 12 }}>
                                     <Text style={styles.name_user}>{item.username}</Text>
-                                    <Text style={styles.time_question}>{item.createdAt}</Text>
+                                    <Text style={styles.time_question}>{formatVietnamDate(item.createdAt)}</Text>
                                 </View>
                                 <TouchableOpacity style={{ position: 'absolute', right: 0, bottom: 18 }}>
                                     <More />

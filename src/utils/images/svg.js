@@ -30,6 +30,8 @@ import VideoIcon from '~assets/img/svg/icon_video.svg';
 import AddImageIcon from '~assets/img/svg/icon_add_image.svg';
 import CopyLinkIcon from '~assets/img/svg/icon_copy_link.svg';
 import EmptyImage from '~assets/img/svg/img_empty_image.svg';
+import HalfStar from '~assets/img/svg/icon_ half_star.svg';
+import ArchiveMinusColor from '~assets/img/svg/icon_archive-tick.svg'
 export {
   News,
   Close,
@@ -62,5 +64,7 @@ export {
   VideoIcon,
   AddImageIcon,
   CopyLinkIcon,
-  EmptyImage
+  EmptyImage,
+  HalfStar,
+  ArchiveMinusColor,
 };

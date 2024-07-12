@@ -7,7 +7,6 @@ const AppImage = {
     imgComment: require('~assets/img/img_comment.png'),
     expertAvatar: require('~assets/img/img_expert_avatar.png'),
     imgNews: require('~assets/img/img_news.png'),
-
     userIcon: require('~assets/img/icon_user.png'),
     passwordIcon: require('~assets/img/icon_lock.png'),
     hidePasswordIcon: require('~assets/img/icon_hide_password.png'),
@@ -40,7 +39,8 @@ const AppImage = {
     posterNews:require('~assets/img/img_poster_news.png'),
     posterLocation:require('~assets/img/img_poster_location.png'),
     MapTest:require('~assets/img/img_MapTest.png'),
-
+    LocationIconMy:require('~assets/img/icon_locationMy.png'),
+    PosterNewsHome:require('~assets/img/img_news_poster_home.png'),
 }
 
 export default AppImage;
