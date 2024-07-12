@@ -35,7 +35,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
         type: ''
     });
 
-    const [events, setEvents] = useState([]);
+    const [suggestedEvent, setSuggestedEvent] = useState([]);
     const [error, setError] = useState(null);
     const PAGE_WIDTH = Dimensions.get('window').width;
     const PAGE_HEIGHT = Dimensions.get('window').height;
@@ -62,14 +62,17 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
     const [pressedQuanTam, setPressedQuanTam] = useState(false);
     const handleQuanTamPress = async () => {
         try {
-            const response = await fetch(`http://192.53.172.131:1050/home/toggleInterestEvent/${item.id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY2N2I3MGEwOTg4Njc3MTNkNGU2NmFkYiIsImZ1bGxOYW1lIjoixJDhu5cgUXVhbmcgR2nDoXAiLCJlbWFpbCI6ImdpYXBkb0BnbWFpbC5jb20iLCJwaG9uZU51bWJlciI6IjA5NjIzNTUzMzUiLCJwYXNzd29yZCI6IiQyYSQxMCRWMTFMSUZ6UUw3TmNJUGxkQklNSGd1bHhWRi5VRTRMVG9pbVhiek4wRW5uc3F6TnVCNjEydSIsImFjdGl2ZSI6dHJ1ZSwiZm9sbG93aW5nIjpbXSwiZm9sbG93ZXJzIjpbIjY2N2I3MDYyOTg4Njc3MTNkNGU2NmFkMSJdLCJ2aWV3cyI6MSwidmlld2VkQnkiOlsiNjY3YjcwNjI5ODg2NzcxM2Q0ZTY2YWQxIl0sImlzQWRtaW4iOmZhbHNlLCJjcmVhdGVkQXQiOiIyMDI0LTA2LTI2VDAxOjM2OjMyLjk1N1oiLCJ1cGRhdGVkQXQiOiIyMDI0LTA2LTI2VDAyOjI1OjI5LjQwNVoiLCJzbHVnIjoixJHhu5ctcXVhbmctZ2nDoXAiLCJyb2xlSWQiOiI2NjM4ODA3NzY0YWEzZWYzNmZjNDQzMWIiLCJfX3YiOjJ9LCJyb2xlIjoidXNlciIsImlhdCI6MTcxOTk5ODQ1NywiZXhwIjoxNzIwMDg0ODU3fQ.rawffGuh1G0oBCtqLHRtKzd-RRkdDsd571BCs_zjuzA',
-                },
-            });
-            const result = await response.json();
+            const accessToken = await AsyncStorage.getItem('accessToken')
+            const response = await axios.post(
+                `http://192.53.172.131:1050/home/toggleInterestEvent/${item.id}`,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': accessToken,
+                    },
+                }
+            );
+            const result = response.data;
             console.log('Toggle pressedQuanTam Result:', result);
             if (result.isInterested !== undefined) {
                 setPressedQuanTam(result.isInterested);
@@ -84,14 +87,17 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
     const [pressedSeThamGia, setPressedSeThamGia] = useState(false);
     const handleSeThamGiaPress = async () => {
         try {
-            const response = await fetch(`http://192.53.172.131:1050/home/toggleParticipantEvent/${item.id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY2N2I3MGEwOTg4Njc3MTNkNGU2NmFkYiIsImZ1bGxOYW1lIjoixJDhu5cgUXVhbmcgR2nDoXAiLCJlbWFpbCI6ImdpYXBkb0BnbWFpbC5jb20iLCJwaG9uZU51bWJlciI6IjA5NjIzNTUzMzUiLCJwYXNzd29yZCI6IiQyYSQxMCRWMTFMSUZ6UUw3TmNJUGxkQklNSGd1bHhWRi5VRTRMVG9pbVhiek4wRW5uc3F6TnVCNjEydSIsImFjdGl2ZSI6dHJ1ZSwiZm9sbG93aW5nIjpbXSwiZm9sbG93ZXJzIjpbIjY2N2I3MDYyOTg4Njc3MTNkNGU2NmFkMSJdLCJ2aWV3cyI6MSwidmlld2VkQnkiOlsiNjY3YjcwNjI5ODg2NzcxM2Q0ZTY2YWQxIl0sImlzQWRtaW4iOmZhbHNlLCJjcmVhdGVkQXQiOiIyMDI0LTA2LTI2VDAxOjM2OjMyLjk1N1oiLCJ1cGRhdGVkQXQiOiIyMDI0LTA2LTI2VDAyOjI1OjI5LjQwNVoiLCJzbHVnIjoixJHhu5ctcXVhbmctZ2nDoXAiLCJyb2xlSWQiOiI2NjM4ODA3NzY0YWEzZWYzNmZjNDQzMWIiLCJfX3YiOjJ9LCJyb2xlIjoidXNlciIsImlhdCI6MTcxOTk5ODQ1NywiZXhwIjoxNzIwMDg0ODU3fQ.rawffGuh1G0oBCtqLHRtKzd-RRkdDsd571BCs_zjuzA',
-                },
-            });
-            const result = await response.json();
+            const accessToken = await AsyncStorage.getItem('accessToken')
+            const response = await axios.post(
+                `http://192.53.172.131:1050/home/toggleParticipantEvent/${item.id}`,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': accessToken,
+                    },
+                }
+            );
+            const result = response.data;
             console.log('Toggle pressedSeThamGia Result:', result);
             if (result.isInterested !== undefined) {
                 setPressedSeThamGia(result.isInterested);
@@ -128,7 +134,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
             try {
                 const response = await axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${item.id}`);
                 if (response.data && response.data.events) {
-                    setEvents(response.data.events);
+                    setSuggestedEvent(response.data.events);
                 } else {
                     console.error('Invalid response structure', response.data);
                 }
@@ -188,7 +194,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
                         style={[styles.gradient, styles.gradientBottom]}
                     />
                 </View>
-                <View style={{ flexGrow: 1,marginTop:PAGE_HEIGHT*0.27}}>
+                <View style={{ flexGrow: 1, marginTop: PAGE_HEIGHT * 0.27 }}>
                     <View style={styles.textOverlay}>
                         <Text style={styles.title_date}>{formatVietnamDate(event.startDate)}</Text>
                         <Text style={styles.title_event}>{event.nameEvent}</Text>
@@ -317,7 +323,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
                         </View>
                         <View style={{ marginTop: 20, marginBottom: 40, marginHorizontal: 16 }}>
                             <Text style={styles.title_suggested_event}>Sự kiện gợi ý</Text>
-                            {events.slice(0, 2).map((suggestedEvent: any, index: any) => (
+                            {suggestedEvent.slice(0, 2).map((suggestedEvent: any, index: any) => (
                                 <View key={index} style={styles.from_date}>
                                     <View style={{ flexDirection: 'row', paddingTop: 8, paddingHorizontal: 8, paddingBottom: 8 }}>
                                         <View style={styles.body_date}>

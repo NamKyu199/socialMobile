@@ -1,14 +1,37 @@
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { ParamListBase, useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ParamListBase, useFocusEffect, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Edit2, GalleryAdd } from "iconsax-react-native";
-import React, { useRef } from "react";
+import axios from "axios";
+import { Cake, Call, Edit2, GalleryAdd, Location, Sms } from "iconsax-react-native";
+import React, { useCallback, useRef, useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { InformationModel } from "~models/InformationModel";
+import { BASE_URL } from "~services/ApiBaseUrl";
 import { AddImageIcon, CopyLinkIcon, EmptyImage, Mores } from "~utils/images/svg";
 
 const Information = (props: any) => {
     const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
-    const bottomSheetRef = useRef<BottomSheetModal>(null)
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const [informationData, setInformationData] = useState<InformationModel>();
+
+    const fetchInformation = async () => {
+        const accessToken = await AsyncStorage.getItem('accessToken')
+        const response = await axios.get(`${BASE_URL}profile/getInformation`,
+            {
+                headers: {
+                    'Authorization': accessToken
+                }
+            }
+        )
+        setInformationData(response.data.getUserInfo)
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchInformation()
+        }, [informationData])
+    )
 
     const follow = [
         { id: 1, count: props.followingCount, text: 'Đang theo dõi' },
@@ -16,6 +39,13 @@ const Information = (props: any) => {
         { id: 3, count: props.totalPoints, text: 'Tương tác' },
         { id: 4, count: props.views, text: 'Lượt xem' },
     ]
+
+    const info = [
+        { id: 1, Icon: Cake, label: informationData?.dateOfBirth },
+        { id: 2, Icon: Location, label: informationData?.currentAddress },
+        { id: 3, Icon: Sms, label: informationData?.email },
+        { id: 5, Icon: Call, label: informationData?.phoneNumber },
+    ];
 
     return (
         <>
@@ -34,8 +64,13 @@ const Information = (props: any) => {
                 </View>
                 <View style={{ marginTop: 45, paddingHorizontal: 16 }}>
                     <Text style={{ fontSize: 20, fontWeight: '700', lineHeight: 24, textAlign: 'center' }}>
-                        Đỗ Hà Trang
+                        {informationData?.fullName}
                     </Text>
+                    {informationData?.jobType !== null && (
+                        <Text style={{ fontSize: 14, fontWeight: '400', lineHeight: 22, textAlign: 'center', marginTop: 4 }}>
+                            {informationData?.jobType}
+                        </Text>
+                    )}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 20 }}>
                         {follow.map(({ id, count, text }) => (
                             <View key={id} style={{ flexDirection: 'column' }}>
@@ -60,12 +95,25 @@ const Information = (props: any) => {
                     <Text style={{ fontSize: 16, fontWeight: '500', lineHeight: 19.52, letterSpacing: 0.001, marginTop: 20, marginBottom: 12 }}>
                         Giới thiệu
                     </Text>
-                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Mores />
-                        <Text style={{ fontSize: 16, fontWeight: '400', lineHeight: 19.52, letterSpacing: 0.001, color: 'rgba(89, 89, 89, 1)' }}>
-                            Thêm thông tin giới thiệu của bạn
-                        </Text>
-                    </TouchableOpacity>
+                    {informationData?.dateOfBirth !== null ?
+                        <>
+                            {info.map(({ id, Icon, label }) => (
+                                <View key={id} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 3 }}>
+                                    <Icon size={20} color="rgba(166, 166, 166, 1)" />
+                                    <Text style={{ fontSize: 16, fontWeight: '400', lineHeight: 19.52, letterSpacing: 0.004, marginLeft: 12 }}>{label}</Text>
+                                </View>
+                            ))}
+                        </>
+                        :
+                        <>
+                            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Mores />
+                                <Text style={{ fontSize: 16, fontWeight: '400', lineHeight: 19.52, letterSpacing: 0.001, color: 'rgba(89, 89, 89, 1)' }}>
+                                    Thêm thông tin giới thiệu của bạn
+                                </Text>
+                            </TouchableOpacity>
+                        </>
+                    }
                     <Text style={{ fontSize: 16, fontWeight: '500', lineHeight: 19.52, letterSpacing: 0.001, marginTop: 20, marginBottom: 12 }}>
                         Link Giới thiệu
                     </Text>
@@ -105,7 +153,7 @@ const Information = (props: any) => {
             >
                 <BottomSheetView>
                     <View>
-                        
+
                     </View>
                 </BottomSheetView>
             </BottomSheetModal>

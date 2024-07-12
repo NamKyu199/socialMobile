@@ -1,4 +1,5 @@
 import { Dimensions, Platform, StyleSheet } from "react-native";
+import { fontFamilies } from "~constant/fontFamilies";
 const PAGE_WIDTH = Dimensions.get('window').width;
 const PAGE_HEIGHT = Dimensions.get('window').height;
 const styles = StyleSheet.create({
@@ -100,13 +101,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginHorizontal: 8,
     },
-    location: {
-        fontWeight: '600',
-        fontSize: 16,
-        color: 'rgba(30, 30, 30, 1)',
-        fontFamily: 'Roboto-Medium',
-        marginHorizontal: 20
-    },
     locationAdress: {
         fontWeight: '300',
         fontSize: 12,
@@ -126,14 +120,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         opacity: 0.7,
         backgroundColor: 'black',
-    },
-    shareIcon1: {
-        tintColor: 'rgba(166, 166, 166, 1)',
-        width: 26,
-        height: 26,
-        alignItems: 'center',
-        marginTop: 5,
-        marginLeft: 12
     },
     from_check_event: {
         marginTop: 20,
@@ -189,7 +175,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginTop: 10,
         paddingVertical: 10,
-        paddingHorizontal: 15,
+        marginHorizontal: 12
     },
     careAbout1: {
         height: 40,
@@ -221,9 +207,9 @@ const styles = StyleSheet.create({
     },
     modalEvent: {
         flex: 1,
-        marginBottom: 50,
-        marginTop: 50,
-        width: '85%',
+        marginBottom: 20,
+        marginTop: 20,
+        width: PAGE_WIDTH * 0.95,
         backgroundColor: 'white',
         borderRadius: 10,
     },
@@ -300,111 +286,9 @@ const styles = StyleSheet.create({
         fontFamily: 'Roboto-Regular',
         marginHorizontal: 20
     },
-    poster: {
-        position: 'relative',
-        width: '100%',
-        height: 260,
-        objectFit: 'cover',
-    },
-    title: {
-        position: 'absolute',
-        bottom: -20,
-        zIndex: 999,
-        alignItems: 'center',
-        alignSelf: 'center',
-    },
-    title_date: {
-        fontWeight: '700',
-        fontSize: 12,
-        color: 'rgba(240, 40, 74, 1)',
-        fontFamily: 'Roboto-Bold'
-    },
-    title_event: {
-        fontWeight: '700',
-        fontSize: 28,
-        color: 'rgba(30, 30, 30, 1)',
-        lineHeight: 35,
-        textAlign: 'center',
-        fontFamily: 'Roboto-Bold'
-    },
-    from_flowing: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginHorizontal: -15
-    },
-    from_share: {
-        marginRight: 8,
-        height: 40,
-        width: 50,
-        backgroundColor: 'rgba(242, 242, 242, 1)',
-        borderRadius: 8,
-        marginTop: 10
-    },
     titleIcon: {
+        marginTop:2,
         marginRight: 5,
-    },
-    from_information: {
-        marginTop: 20,
-    },
-    title_infomation: {
-        fontWeight: '700',
-        fontSize: 18,
-        color: 'rgba(231, 79, 177, 1)',
-        fontFamily: 'Roboto-Bold'
-    },
-    information: {
-        flexDirection: 'row',
-        marginTop: 10,
-    },
-    heading_information: {
-        marginLeft: 15,
-        fontWeight: '400',
-        fontSize: 14,
-        color: 'rgba(30, 30, 30, 1)',
-        fontFamily: 'Roboto-Regular'
-    },
-    heading_information_link: {
-        marginLeft: 15,
-        fontWeight: '400',
-        fontSize: 14,
-        color: 'rgba(24, 144, 255, 1)',
-        fontFamily: 'Roboto-Regular'
-    },
-    seeMore: {
-        fontWeight: 'bold',
-        color: 'black'
-    },
-    title_text: {
-        marginTop: 12,
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: 'black',
-        lineHeight: 25
-    },
-    textStyle: {
-        fontSize: 14,
-        fontWeight: '400',
-        color: 'rgba(101, 103, 107, 1)',
-        lineHeight: 25,
-        fontFamily: 'Roboto-Regular'
-    },
-    from_location: {
-        fontWeight: '700',
-        fontSize: 16,
-        color: 'rgba(30, 30, 30, 1)',
-        fontFamily: 'Roboto-Bold'
-    },
-    body_location: {
-        borderWidth: 1,
-        marginTop: 10,
-        paddingBottom: 10,
-        borderRadius: 8,
-        borderColor: 'rgba(173, 175, 178, 0.28)'
-    },
-    map: {
-        width: '100%',
-        height: 150,
-        borderRadius: 8
     },
     MainContainer: {
         position: 'absolute',
@@ -422,74 +306,12 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
     },
-    from_location_map: {
-        marginTop: 12,
-        marginRight: 30,
-        paddingLeft: 15
-    },
-    title_map: {
-        fontWeight: '500',
-        fontSize: 16,
-        color: 'rgba(30, 30, 30, 1)',
-        marginTop: 5,
-        fontFamily: 'Roboto-Regular'
-    },
-    location_map: {
-        fontWeight: '400',
-        fontSize: 14,
-        color: 'rgba(101, 103, 107, 1)',
-        marginTop: 3,
-        fontFamily: 'Roboto-Regular'
-    },
-    title_suggested_event: {
-        fontWeight: '800',
-        fontSize: 16,
-        color: 'rgba(30, 30, 30, 1)',
-        fontFamily: 'Roboto-Black'
-    },
-    from_date: {
-        width: PAGE_WIDTH * 0.8,
-        flexDirection: 'row',
-        marginTop: 10,
-        borderWidth: 1,
-        borderRadius: 8,
-        borderColor: 'rgba(173, 175, 178, 0.28)',
-        alignSelf: 'center',
-        padding: 5
-    },
-    body_date: {
-        padding: 10,
-        backgroundColor: 'rgba(240, 240, 240, 1)',
-        borderRadius: 8,
-        alignSelf: 'center'
-    },
-    month: {
-        marginTop: 10,
-        fontWeight: '500',
-        fontSize: 16,
-        color: 'rgba(30, 30, 30, 1)',
-        alignSelf: 'center',
-        fontFamily: 'Roboto-Regular'
-    },
-    time_event: {
-        fontWeight: '400',
-        fontSize: 12,
-        color: 'rgba(240, 40, 74, 1)',
-        fontFamily: 'Roboto-Regular'
-    },
-    title_time_event: {
+    location: {
         fontWeight: '600',
-        fontSize: 14,
-        color: 'rgba(22, 22, 22, 1)',
-        lineHeight: 18,
-        fontFamily: 'Roboto-Medium'
-    },
-    location_event: {
-        fontWeight: '400',
-        fontSize: 12,
-        color: 'rgba(101, 103, 107, 1)',
-        lineHeight: 18,
-        fontFamily: 'Roboto-Regular'
+        fontSize: 16,
+        color: 'rgba(30, 30, 30, 1)',
+        fontFamily: 'Roboto-Medium',
+        marginHorizontal: 20
     },
     from_image: {
         flex: 1,
@@ -558,9 +380,7 @@ const styles = StyleSheet.create({
     },
     openingHoursContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
     },
     dayOfWeek: {
         fontWeight: '700',
@@ -578,6 +398,199 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: 'Roboto-Regular',
         color: 'black',
+    },
+    imageContainer: {
+        width: PAGE_WIDTH,
+        height: PAGE_HEIGHT * 0.3,
+        position: 'absolute',
+    },
+    poster: {
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+    },
+    gradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+    },
+    gradientTop: {
+        top: 0,
+        height: '50%',
+    },
+    gradientBottom: {
+        bottom: 0,
+        height: '50%',
+    },
+    textOverlay: {
+        alignSelf: 'center',
+        alignItems: 'center',
+        width: PAGE_WIDTH * 0.9,
+    },
+    title_date: {
+        fontWeight: '700',
+        fontSize: 12,
+        color: 'rgba(240, 40, 74, 1)',
+        fontFamily: 'Roboto-Bold',
+    },
+    title_event: {
+        fontWeight: '700',
+        fontSize: 28,
+        color: '#000000',
+        lineHeight: 35,
+        fontFamily: 'Roboto-Bold',
+        textAlign: 'center',
+    },
+    from_flowing: {
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
+    from_share: {
+        height: 40,
+        marginTop:10,
+        width: 50,
+        backgroundColor: 'rgba(242, 242, 242, 1)',
+        borderRadius: 8,
+    },
+    shareIcon: {
+        tintColor: 'rgba(166, 166, 166, 1)',
+        width: 26,
+        height: 26,
+        alignItems: 'center',
+        marginTop: 5,
+        marginLeft: 12
+    },
+    from_information: {
+        marginTop: 20,
+    },
+    title_infomation: {
+        fontWeight: '700',
+        fontSize: 18,
+        color: 'rgba(231, 79, 177, 1)',
+        fontFamily: 'Roboto-Bold'
+    },
+    information: {
+        flexDirection: 'row',
+        marginTop: 10,
+    },
+    heading_information: {
+        marginLeft: 15,
+        fontWeight: '400',
+        fontSize: 14,
+        color: 'rgba(30, 30, 30, 1)',
+        fontFamily: 'Roboto-Regular'
+    },
+    heading_information_link: {
+        marginLeft: 15,
+        fontWeight: '400',
+        fontSize: 14,
+        color: 'rgba(24, 144, 255, 1)',
+        fontFamily: 'Roboto-Regular'
+    },
+    title_text: {
+        marginTop: 12,
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: 'black',
+        lineHeight: 25
+    },
+    seeMore: {
+        fontWeight: 'bold',
+        color: 'black'
+    },
+    textStyle: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: 'rgba(101, 103, 107, 1)',
+        lineHeight: 25,
+        fontFamily: 'Roboto-Regular'
+    },
+    from_location: {
+        fontWeight: '700',
+        fontSize: 16,
+        color: 'rgba(30, 30, 30, 1)',
+        fontFamily: 'Roboto-Bold'
+    },
+    body_location: {
+        borderWidth: 1,
+        marginTop: 10,
+        paddingBottom: 10,
+        borderRadius: 8,
+        borderColor: 'rgba(173, 175, 178, 0.28)'
+    },
+    map: {
+        width: '100%',
+        height: 150,
+        borderRadius: 8
+    },
+    from_location_map: {
+        marginTop: 12,
+        marginRight: 30,
+        paddingLeft: 15
+    },
+    title_map: {
+        fontWeight: '500',
+        fontSize: 16,
+        color: 'rgba(30, 30, 30, 1)',
+        marginTop: 5,
+        fontFamily: fontFamilies.medium,
+    },
+    location_map: {
+        fontWeight: '400',
+        fontSize: 14,
+        color: 'rgba(101, 103, 107, 1)',
+        marginTop: 3,
+        fontFamily: 'Roboto-Regular'
+    },
+    title_suggested_event: {
+        fontWeight: '800',
+        fontSize: 16,
+        color: 'rgba(30, 30, 30, 1)',
+        fontFamily: 'Roboto-Black'
+    },
+    from_date: {
+        borderWidth: 1,
+        borderRadius: 8,
+        borderColor: 'rgba(173, 175, 178, 0.28)',
+        width: PAGE_WIDTH * 0.9,
+        marginTop: 8
+    },
+    body_date: {
+        paddingTop: 8,
+        paddingHorizontal: 8,
+        paddingBottom: 11,
+        backgroundColor: 'rgba(240, 240, 240, 1)',
+        borderRadius: 8,
+        alignSelf: 'center'
+    },
+    month: {
+        fontWeight: '500',
+        fontSize: 16,
+        color: 'rgba(30, 30, 30, 1)',
+        alignSelf: 'center',
+        fontFamily: 'Roboto-Regular',
+    },
+    time_event: {
+        fontWeight: '400',
+        fontSize: 12,
+        color: 'rgba(240, 40, 74, 1)',
+        marginRight: 15,
+        fontFamily: 'Roboto-Regular'
+    },
+    title_time_event: {
+        fontWeight: '600',
+        fontSize: 14,
+        color: 'rgba(22, 22, 22, 1)',
+        marginRight: 15,
+        lineHeight: 18,
+        fontFamily: 'Roboto-Medium'
+    },
+    location_event: {
+        fontWeight: '400',
+        fontSize: 12,
+        color: 'rgba(101, 103, 107, 1)',
+        lineHeight: 18,
+        fontFamily: 'Roboto-Regular',
     },
 })
 
