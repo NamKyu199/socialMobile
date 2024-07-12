@@ -1,4 +1,5 @@
 import axios from "axios";
+import moment from "moment";
 import React, { useEffect, useState } from "react"
 import { Dimensions, Image, ScrollView, Text, TouchableOpacity, View } from "react-native"
 import styles from "~screens/MainScreen/NewsScreen/NutritionScreen/styles";
@@ -14,6 +15,7 @@ const NutritionScreen = ({ navigation }: any) => {
             try {
                 const response = await axios.get('http://192.53.172.131:1050/news/news');
                 setNutritionNews(response.data.newsInfo);
+                console.log('item:', response.data.newsInfo);
             }
             catch (error: any) {
                 console.error('Error fetching News :', error.message)
@@ -41,6 +43,12 @@ const NutritionScreen = ({ navigation }: any) => {
     const PAGE_WIDTH = Dimensions.get('window').width;
     const PAGE_HEIGHT = Dimensions.get('window').height;
 
+    const formatVietnamDate = (utcDate: string): string => {
+        const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
+        const formattedDate = vietnamDate.format('DD/MM/YYYY');
+        return formattedDate;
+    };
+
     return (
         <ScrollView style={{ marginHorizontal: 10, marginBottom: 15 }}>
             <Text style={styles.title}>Dinh dưỡng</Text>
@@ -49,9 +57,7 @@ const NutritionScreen = ({ navigation }: any) => {
                 showsHorizontalScrollIndicator={false}>
                 {nutritious.map((item: any, index: any) => (
                     <View key={index} style={styles.from_backgroud_event}>
-                        {item.images.slice(0, 1).map((images: any, index: any) => (
-                            <Image key={index} source={{ uri: images }} style={styles.background_envent} />
-                        ))}
+                        <Image source={{ uri: item.coverImage }} style={styles.background_envent} />
                         <View style={styles.date_title}>
                             <View style={{ flexDirection: 'row', marginHorizontal: 8 }}>
                                 {item.topic.slice(0, 3).map((topic: any, idx: any) => (
@@ -66,7 +72,7 @@ const NutritionScreen = ({ navigation }: any) => {
                             <View style={styles.footerEvent}>
                                 <View style={{ flexDirection: 'row' }}>
                                     <Image source={AppImage.date} style={{ marginRight: 5, tintColor: 'rgba(255, 255, 255, 1)' }} />
-                                    <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(255, 255, 255, 1)', fontFamily: 'Roboto-Regular' }}>{item.createdAt}</Text>
+                                    <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(255, 255, 255, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
                                 </View>
                                 <View style={{ flexDirection: 'row' }}>
                                     <Image source={AppImage.userIcon} style={{ width: 16, height: 16, marginRight: 5, tintColor: 'rgba(255, 255, 255, 1)' }} />
@@ -80,11 +86,9 @@ const NutritionScreen = ({ navigation }: any) => {
             {/* Các sự kiện liên quan */}
             <View style={{ marginTop: 30 }}>
                 <Text style={styles.header_heading}>Tin mới</Text>
-                {nutritionNews.slice(0, 10).map((item: any, index: any) => (
+                {nutritionNews.map((item: any, index: any) => (
                     <View key={index} style={styles.fromEventNew}>
-                        {item.images.slice(0, 1).map((images: any, index: any) => (
-                            <Image key={index} source={{ uri: images }} style={{ width: PAGE_WIDTH * 0.4, height: PAGE_HEIGHT * 0.13, borderRadius: 8 }} />
-                        ))}
+                        <Image source={{ uri: item.coverImage }} style={{ width: PAGE_WIDTH * 0.4, height: PAGE_HEIGHT * 0.13, borderRadius: 8 }} />
                         <View style={{ width: PAGE_WIDTH * 0.5 }}>
                             <TouchableOpacity style={{ flexGrow: 1 }} onPress={() => navigation.navigate('DetailsNewsScreen', { item })}>
                                 <Text numberOfLines={4} style={styles.titleEvent2}>{item.title}</Text>
@@ -92,7 +96,7 @@ const NutritionScreen = ({ navigation }: any) => {
                             <View style={{ flexDirection: 'row', marginLeft: 20, marginTop: 'auto' }}>
                                 <View style={{ flexDirection: 'row', marginTop: 'auto' }}>
                                     <Image source={AppImage.date} style={{ marginRight: 5 }} />
-                                    <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{item.createdAt}</Text>
+                                    <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
                                 </View>
                             </View>
                         </View>

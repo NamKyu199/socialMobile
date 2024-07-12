@@ -78,7 +78,6 @@ const EvaluateScreen = ({ route, navigation }: any) => {
             }
         )
         setUserAvatar(response.data)
-        console.log(response.data)
     }
 
     useEffect(() => {

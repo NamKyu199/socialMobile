@@ -176,14 +176,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'black',
     },
     shareIcon: {
-        marginTop: 15,
-        marginRight: 5,
-        zIndex: 1,
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        width: PAGE_WIDTH * 0.09,
-        height: 36
+        width:'100%',
+        height:'100%'
     },
     from_check_event: {
         marginTop: 20,
