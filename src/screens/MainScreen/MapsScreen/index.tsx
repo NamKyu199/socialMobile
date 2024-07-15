@@ -75,20 +75,22 @@ const MapsScreen = ({ navigation }: any) => {
   const [pressedSeThamGia, setPressedSeThamGia] = useState(false);
   const [toggleLocationSaved, seTtoggleLocationSaved] = useState<boolean>(false);
   const [locationSaveID, setLocationSaveID] = useState(null);
+  const [eventId, setEventId] = useState<string | null>(null);
 
-  const handleShowModalEvent = async () => {
+  const handleShowModalEvent = async (ids: any) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const [eventResponse, suggestedResponse] = await Promise.all([
-        axios.get(`http://192.53.172.131:1050/home/getEvent/${eventId}`, {
+        axios.get(`http://192.53.172.131:1050/home/getEvent/${ids}`, {
           headers: { Authorization: accessToken },
         }),
-        axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${eventId}`, {
+        axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${ids}`, {
           headers: { Authorization: accessToken },
         }),
       ]);
       setEventDetails(eventResponse.data.event);
       setSuggestedEvent(suggestedResponse.data.events);
+      setEventId(ids)
       setSelectedOption((prev) => ({ ...prev, showModalEvent: true }));
     } catch (error: any) {
       console.error('Error fetching event details or suggested events:', error.message);
@@ -304,10 +306,9 @@ const MapsScreen = ({ navigation }: any) => {
     }
   };
 
-  const [eventId, setEventId] = useState<string | null>(null);
   const fetchEventNews = async (latitude: number, longitude: number) => {
     try {
-      const accessToken = await AsyncStorage.getItem('accessToken')
+      const accessToken = await AsyncStorage.getItem('accessToken');
       const response = await axios.post('http://192.53.172.131:1050/home/getEventsLocation', {
         latitude: latitude,
         longitude: longitude,
@@ -316,10 +317,14 @@ const MapsScreen = ({ navigation }: any) => {
           'Authorization': accessToken,
         }
       });
-      setEventNews(response.data.events);
-      if (response.data.events.length > 0) {
-        setEventId(response.data.events[0].id);
-      }
+      const events = response.data.events;
+      setEventNews(events);
+
+      // if (events.length > 0) {
+      //   const ids = events.map((event: any) => event.id);
+      //   setEventId(ids);
+      //   console.log(ids);
+      // }
     } catch (error: any) {
       console.error('Error fetching events :', error.message);
     }
@@ -340,7 +345,7 @@ const MapsScreen = ({ navigation }: any) => {
   moment.locale('en');
   const formatVietnamDateMore = (utcDate: any) => {
     const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
-    const daysOfWeek: any= {
+    const daysOfWeek: any = {
       'Sunday': 'CHỦ NHẬT',
       'Monday': 'THỨ HAI',
       'Tuesday': 'THỨ BA',
@@ -502,11 +507,11 @@ const MapsScreen = ({ navigation }: any) => {
             </MapView>
           </SafeAreaView>
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.iconButton} onPress={handleShowSaveLocation}>
-              {selectedOption.showSaveLocation ? <CloseCircle color='#E74FB1' variant="Bold" size={50} /> : <ArchiveMinus size={24} color='rgba(231, 79, 177, 1)' style={styles.buttonIcon} />}
+            <TouchableOpacity style={selectedOption.showSaveLocation ? styles.iconButton1 : styles.iconButton} onPress={handleShowSaveLocation}>
+              {selectedOption.showSaveLocation ? <CloseCircle color='#E74FB1' variant="Bold" size={55} /> : <ArchiveMinus size={24} color='rgba(231, 79, 177, 1)' style={styles.buttonIcon} />}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={handleShowEvent}>
-              {selectedOption.showEvent ? <CloseCircle color='#E74FB1' variant="Bold" size={50} /> : <Calendar size={24} color='rgba(231, 79, 177, 1)' style={styles.buttonIcon} />}
+            <TouchableOpacity style={selectedOption.showEvent ? styles.iconButton1 : styles.iconButton} onPress={handleShowEvent}>
+              {selectedOption.showEvent ? <CloseCircle color='#E74FB1' variant="Bold" size={55} /> : <Calendar size={24} color='rgba(231, 79, 177, 1)' style={styles.buttonIcon} />}
             </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton} onPress={handleShareLocation}>
               <DirectIcon style={styles.buttonIcon} />
@@ -606,7 +611,7 @@ const MapsScreen = ({ navigation }: any) => {
       {selectedOption.showEvent && (
         <View style={{ marginBottom: 30 }}>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-            {eventNews.slice(0, 3).map((item: any, index: number) => (
+            {eventNews.map((item: any, index: number) => (
               <View key={index} style={styles.from_backgroud_event}>
                 <Image source={{ uri: item?.image }} style={styles.background_envent} />
                 {item?.startDate === getCurrentDate() ? (
@@ -622,7 +627,8 @@ const MapsScreen = ({ navigation }: any) => {
                   <TouchableOpacity
                     style={{ zIndex: 99 }}
                     onPress={() => {
-                      handleShowModalEvent();
+                      const ids = item.id;
+                      handleShowModalEvent(ids);
                     }}>
                     <Text style={styles.title_event1} numberOfLines={2}>{item?.nameEvent}</Text>
                   </TouchableOpacity>

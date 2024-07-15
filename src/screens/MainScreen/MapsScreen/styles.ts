@@ -67,6 +67,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 15,
     },
+    iconButton1: {
+        height: 50,
+        width: 50,
+        backgroundColor: 'transparent',
+        borderRadius: 51,
+        alignItems: 'center',
+        marginTop: 15,
+    },
     uniconButton: {
         borderRadius: 51,
         alignItems: 'center',
@@ -287,7 +295,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 20
     },
     titleIcon: {
-        marginTop:2,
+        marginTop: 2,
         marginRight: 5,
     },
     MainContainer: {
@@ -447,7 +455,7 @@ const styles = StyleSheet.create({
     },
     from_share: {
         height: 40,
-        marginTop:10,
+        marginTop: 10,
         width: 50,
         backgroundColor: 'rgba(242, 242, 242, 1)',
         borderRadius: 8,

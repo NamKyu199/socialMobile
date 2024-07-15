@@ -13,6 +13,7 @@ import { fontFamilies } from "~constant/fontFamilies";
 import LinearGradient from 'react-native-linear-gradient';
 import moment from 'moment-timezone';
 import 'moment/locale/vi';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HomeScreen = ({ navigation }: any) => {
 
@@ -21,6 +22,7 @@ const HomeScreen = ({ navigation }: any) => {
     const [likeIds, setLikeIds] = useState<string[]>([]);
     const [voteCounts, setVoteCounts] = useState<{ [key: string]: number }>({});
     const [activeIndex, setActiveIndex] = useState(0);
+    // Fetch questions and initialize state from API
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -34,15 +36,22 @@ const HomeScreen = ({ navigation }: any) => {
                 setQuestions(questionsData);
                 setLikeIds(initialLikeIds);
                 setVoteCounts(initialVoteCounts);
+
+                // Lưu trạng thái ban đầu vào AsyncStorage
+                await AsyncStorage.setItem('likeIds', JSON.stringify(initialLikeIds));
+                await AsyncStorage.setItem('voteCounts', JSON.stringify(initialVoteCounts));
             } catch (error: any) {
                 console.error('Error fetching questions:', error.message);
             }
         };
         fetchQuestions();
     }, []);
+
+    // Update state and AsyncStorage on button press
     const handlePress = async (values: any) => {
         const isLiked = likeIds.includes(values.questionId);
         let newLikeIds, newVoteCounts;
+
         if (!isLiked) {
             newLikeIds = [...likeIds, values.questionId];
             newVoteCounts = { ...voteCounts, [values.questionId]: (voteCounts[values.questionId] || values.totalVotes) + 1 };
@@ -50,17 +59,23 @@ const HomeScreen = ({ navigation }: any) => {
             newLikeIds = likeIds.filter((item) => values.questionId !== item);
             newVoteCounts = { ...voteCounts, [values.questionId]: voteCounts[values.questionId] - 1 };
         }
+
         setLikeIds(newLikeIds);
         setVoteCounts(newVoteCounts);
+
+        // Lưu trạng thái mới vào AsyncStorage
+        await AsyncStorage.setItem('likeIds', JSON.stringify(newLikeIds));
+        await AsyncStorage.setItem('voteCounts', JSON.stringify(newVoteCounts));
+
         try {
-            const response = await fetch('http://192.53.172.131:1050/community/vote-question/' + values.questionId, {
-                method: 'PUT',
+            const accessToken = await AsyncStorage.getItem('accessToken');
+            const response = await axios.post('http://192.53.172.131:1050/community/vote-question/' + values.questionId, {}, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY2N2I3MTQ2Y2EwZDZiYmUyYzcyZTZmMCIsImZ1bGxOYW1lIjoiQWRtaW4iLCJlbWFpbCI6Im1pZHVhZG1pbkBnbWFpbC5jb20iLCJwaG9uZU51bWJlciI6IjA3OTYxODg4ODMiLCJwYXNzd29yZCI6IiQyYSQxMCRVR2NSVDBRMzZSTUh1T3VDbWtWZ2F1MHlqZ3hTaXZ4TjdvSExKaVN2eVpVaDZNUUMzTEtMQyIsImFjdGl2ZSI6dHJ1ZSwiZm9sbG93aW5nIjpbXSwiZm9sbG93ZXJzIjpbXSwidmlld3MiOjAsInZpZXdlZEJ5IjpbXSwiaXNBZG1pbiI6dHJ1ZSwiY3JlYXRlZEF0IjoiMjAyNC0wNi0yNlQwMTozOToxOC4yMzBaIiwidXBkYXRlZEF0IjoiMjAyNC0wNi0yNlQwMTozOToxOC4yMzBaIiwic2x1ZyI6ImFkbWluIiwicm9sZUlkIjoiNjYzODgwNzc2NGFhM2VmMzZmYzQ0MzFkIiwiX192IjowfSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzE5NDEwNTg4LCJleHAiOjE3MTk0OTY5ODh9.jMn4briglJur1BXEkxFBD7b0qX0j5M0tJmhv3l0O4zE',
+                    'Authorization': accessToken,
                 },
             });
-            const result = await response.json();
+            const result = response.data;
             console.log('result:', result);
         } catch (error: any) {
             console.error('Error:', error.message);

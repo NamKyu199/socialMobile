@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, Text, TouchableOpacity } from "react-native";
 import Header from "./Component/Header";
 import Information from "./Component/Information";
 import Evaluate from "./Component/Evaluate";
@@ -128,6 +128,15 @@ const ProfileScreen = () => {
       <Evaluate />
       <Posts />
       <AnswerQuestion />
+      <TouchableOpacity
+        onPress={() => {
+          
+        }}
+      >
+        <Text>
+          Đăng xuất
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   )
 }
