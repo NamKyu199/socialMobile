@@ -53,7 +53,12 @@ const MapsScreen = ({ navigation }: any) => {
   const handleShowSaveLocation = async () => {
     setSelectedOption((prev) => ({ ...prev, showLocation: false, showEvent: false, showSaveLocation: !selectedOption.showSaveLocation }));
     try {
-      const response = await axios.get('http://192.53.172.131:1050/map/locationSaved');
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      const response = await axios.get('http://192.53.172.131:1050/map/locationSaved', {
+        headers: {
+          'Authorization': accessToken,
+        }
+      });
       const result = response.data;
       setSaveLocation(result.locations)
     } catch (error: any) {
@@ -73,24 +78,25 @@ const MapsScreen = ({ navigation }: any) => {
   const [suggestedEvent, setSuggestedEvent] = useState([]);
   const [pressedQuanTam, setPressedQuanTam] = useState(false);
   const [pressedSeThamGia, setPressedSeThamGia] = useState(false);
-  const [toggleLocationSaved, seTtoggleLocationSaved] = useState<boolean>(false);
+  const [toggleLocationSaved, setToggleLocationSaved] = useState(false);
   const [locationSaveID, setLocationSaveID] = useState(null);
-  const [eventId, setEventId] = useState<string | null>(null);
+  const [eventIds, setEventIds] = useState(null);
 
-  const handleShowModalEvent = async (ids: any) => {
+  const handleShowModalEvent = async (eventId: any) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const [eventResponse, suggestedResponse] = await Promise.all([
-        axios.get(`http://192.53.172.131:1050/home/getEvent/${ids}`, {
+        axios.get(`http://192.53.172.131:1050/home/getEvent/${eventId}`, {
           headers: { Authorization: accessToken },
         }),
-        axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${ids}`, {
+        axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${eventId}`, {
           headers: { Authorization: accessToken },
         }),
       ]);
       setEventDetails(eventResponse.data.event);
       setSuggestedEvent(suggestedResponse.data.events);
-      setEventId(ids)
+      setEventIds(eventId);
+      console.log('id:', eventId);
       setSelectedOption((prev) => ({ ...prev, showModalEvent: true }));
     } catch (error: any) {
       console.error('Error fetching event details or suggested events:', error.message);
@@ -100,11 +106,11 @@ const MapsScreen = ({ navigation }: any) => {
   useEffect(() => {
     const fetchPressedStates = async () => {
       try {
-        const quanTamValue = await AsyncStorage.getItem(`pressedQuanTam${eventId}`);
+        const quanTamValue = await AsyncStorage.getItem(`pressedQuanTam${eventIds}`);
         if (quanTamValue !== null) {
           setPressedQuanTam(JSON.parse(quanTamValue));
         }
-        const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${eventId}`);
+        const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${eventIds}`);
         if (seThamGiaValue !== null) {
           setPressedSeThamGia(JSON.parse(seThamGiaValue));
         }
@@ -113,12 +119,39 @@ const MapsScreen = ({ navigation }: any) => {
       }
     };
 
-    if (eventId !== null) {
+    if (eventIds !== null) {
       fetchPressedStates();
     }
-  });
+  }, [eventIds]);
 
-  const handleQuanTamPress = async () => {
+  const handleQuanTamPressMore = async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      const response = await axios.post(
+        `http://192.53.172.131:1050/home/toggleInterestEvent/${eventIds}`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: accessToken,
+          },
+        }
+      );
+      const result = response.data;
+      console.log('Toggle pressedQuanTam Result:', result);
+      if (result.isInterested !== undefined) {
+        setPressedQuanTam(result.isInterested);
+        await AsyncStorage.setItem(`pressedQuanTam${eventIds}`, JSON.stringify(result.isInterested));
+      } else {
+        console.error('Invalid toggleInterestEvent response:', result);
+      }
+    } catch (error: any) {
+      console.error('Error toggling interest:', error.message);
+    }
+  };
+
+  const [pressedQuanTamStates, setPressedQuanTamStates] = useState<{ [key: string]: boolean }>({});
+  const handleQuanTamPress = async (eventId: string) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const response = await axios.post(
@@ -134,7 +167,10 @@ const MapsScreen = ({ navigation }: any) => {
       const result = response.data;
       console.log('Toggle pressedQuanTam Result:', result);
       if (result.isInterested !== undefined) {
-        setPressedQuanTam(result.isInterested);
+        setPressedQuanTamStates((prevState) => ({
+          ...prevState,
+          [eventId]: result.isInterested,
+        }));
         await AsyncStorage.setItem(`pressedQuanTam${eventId}`, JSON.stringify(result.isInterested));
       } else {
         console.error('Invalid toggleInterestEvent response:', result);
@@ -148,7 +184,7 @@ const MapsScreen = ({ navigation }: any) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const response = await axios.post(
-        `http://192.53.172.131:1050/home/toggleParticipantEvent/${eventId}`,
+        `http://192.53.172.131:1050/home/toggleParticipantEvent/${eventIds}`,
         {},
         {
           headers: {
@@ -161,7 +197,7 @@ const MapsScreen = ({ navigation }: any) => {
       console.log('Toggle pressedSeThamGia Result:', result);
       if (result.isInterested !== undefined) {
         setPressedSeThamGia(result.isInterested);
-        await AsyncStorage.setItem(`pressedSeThamGia${eventId}`, JSON.stringify(result.isInterested));
+        await AsyncStorage.setItem(`pressedSeThamGia${eventIds}`, JSON.stringify(result.isInterested));
       } else {
         console.error('Invalid toggleParticipantEvent response:', result);
       }
@@ -175,6 +211,7 @@ const MapsScreen = ({ navigation }: any) => {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const response = await axios.post(
         `http://192.53.172.131:1050/map/toggleLocationSaved/${locationSaveID}`,
+        {},
         {
           headers: {
             Authorization: accessToken,
@@ -184,7 +221,7 @@ const MapsScreen = ({ navigation }: any) => {
       const result = response.data;
       console.log('Toggle pressedSaveLocation Result:', result);
       if (result.isSaved !== undefined) {
-        seTtoggleLocationSaved(result.isSaved);
+        setToggleLocationSaved(result.isSaved);
         await AsyncStorage.setItem(`pressedSaveLocation${locationSaveID}`, JSON.stringify(result.isSaved));
       } else {
         console.error('Invalid toggleLocationSaved response:', result);
@@ -194,10 +231,32 @@ const MapsScreen = ({ navigation }: any) => {
     }
   };
 
+  useEffect(() => {
+    const fetchSaveLocation = async () => {
+      try {
+        const saveLocation = await AsyncStorage.getItem(`pressedSaveLocation${locationSaveID}`);
+        if (saveLocation !== null) {
+          setToggleLocationSaved(JSON.parse(saveLocation));
+        }
+      } catch (error: any) {
+        console.error('Error fetching pressed states from AsyncStorage:', error.message);
+      }
+    };
+    if (locationSaveID !== null) {
+      fetchSaveLocation();
+    }
+  }, [locationSaveID]);
+
   const handleOpenBottomSheetMore = async (item: any) => {
     try {
+      const accessToken = await AsyncStorage.getItem('accessToken');
       const [locationResponse, reviewsResponse, summaryReviewResponse] = await Promise.all([
-        axios.get(`http://192.53.172.131:1050/map/locationId/${item._id}`),
+        axios.get(`http://192.53.172.131:1050/map/locationId/${item._id}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: accessToken,
+          },
+        }),
         axios.get(`http://192.53.172.131:1050/map/formattedReviews/${item._id}`),
         axios.get(`http://192.53.172.131:1050/map/summaryReview/${item._id}`)
       ]);
@@ -205,11 +264,21 @@ const MapsScreen = ({ navigation }: any) => {
       setReviews(reviewsResponse.data.reviews);
       setSummaryReview(summaryReviewResponse.data);
       if (!selectedOption.hasOpenedOnce) {
-        setSelectedOption((prev) => ({ ...prev, bottomSheetMoreOpen: !selectedOption.bottomSheetMoreOpen, hasOpenedOnce: true }));
+        setSelectedOption((prev) => ({
+          ...prev,
+          bottomSheetMoreOpen: !selectedOption.bottomSheetMoreOpen,
+          hasOpenedOnce: true
+        }));
       }
       bottomSheetRef.current?.expand();
-      setSelectedOption((prev) => ({ ...prev, showLocation: false, showEvent: false, showSaveLocation: false }));
-      setLocationSaveID(item._id)
+      setSelectedOption((prev) => ({
+        ...prev,
+        showLocation: false,
+        showEvent: false,
+        showSaveLocation: false
+      }));
+      setLocationSaveID(item._id);
+      console.log(item._id);
     } catch (error: any) {
       console.error('Error fetching event details:', error.message);
     }
@@ -319,12 +388,6 @@ const MapsScreen = ({ navigation }: any) => {
       });
       const events = response.data.events;
       setEventNews(events);
-
-      // if (events.length > 0) {
-      //   const ids = events.map((event: any) => event.id);
-      //   setEventId(ids);
-      //   console.log(ids);
-      // }
     } catch (error: any) {
       console.error('Error fetching events :', error.message);
     }
@@ -627,26 +690,27 @@ const MapsScreen = ({ navigation }: any) => {
                   <TouchableOpacity
                     style={{ zIndex: 99 }}
                     onPress={() => {
-                      const ids = item.id;
-                      handleShowModalEvent(ids);
+                      const eventId = item.id;
+                      console.log('item:', eventId)
+                      handleShowModalEvent(eventId);
                     }}>
                     <Text style={styles.title_event1} numberOfLines={2}>{item?.nameEvent}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
                       styles.careAbout,
-                      { backgroundColor: pressedQuanTam ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                      { backgroundColor: pressedQuanTamStates[item.id] ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                     ]}
                     accessibilityLabel="Interested"
                     accessibilityHint="Mark your interest for the event"
-                    onPress={handleQuanTamPress}
+                    onPress={() => handleQuanTamPress(item.id)}
                   >
                     <View style={styles.titleIcon}>
-                      {pressedQuanTam ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
+                      {pressedQuanTamStates[item.id] ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
                     </View>
                     <Text style={[
                       styles.headingAbout,
-                      { color: pressedQuanTam ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
+                      { color: pressedQuanTamStates[item.id] ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
                     ]}>
                       Quan tâm
                     </Text>
@@ -786,7 +850,7 @@ const MapsScreen = ({ navigation }: any) => {
                         ]}
                         accessibilityLabel="Interested"
                         accessibilityHint="Mark your interest for the event"
-                        onPress={handleQuanTamPress}
+                        onPress={handleQuanTamPressMore}
                       >
                         <View style={styles.titleIcon}>
                           {pressedQuanTam ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
@@ -1096,35 +1160,45 @@ const MapsScreen = ({ navigation }: any) => {
                   <Call color='#E74FB1' style={{ marginLeft: 16 }} />
                   <Text style={{ marginLeft: 4, fontWeight: '600', fontFamily: 'Roboto-Medium', fontSize: 14, color: '#E74FB1' }}>Gọi</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[{
-                  width: 90,
-                  height: 40,
-                  backgroundColor: '#E74FB11A',
-                  borderRadius: 20,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginLeft: 16
-                },
-                { backgroundColor: toggleLocationSaved ? '#E74FB1' : '#E74FB11A' }]}
+                <TouchableOpacity
+                  style={[
+                    {
+                      width: 90,
+                      height: 40,
+                      backgroundColor: '#E74FB11A',
+                      borderRadius: 20,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginLeft: 16
+                    },
+                    { backgroundColor: toggleLocationSaved ? '#E74FB1' : '#E74FB11A' }
+                  ]}
                   accessibilityLabel="isSaved"
                   accessibilityHint="Mark your isSaved for the Location"
-                  onPress={handleSaveLocationPress}>
+                  onPress={handleSaveLocationPress}
+                >
                   <View>
-                    {toggleLocationSaved ? <ArchiveMinusColor color='#FFFFFF' style={{ marginLeft: 18 }} /> : <ArchiveMinus color='#E74FB1' style={{ marginLeft: 18 }} />}
+                    {toggleLocationSaved ? (
+                      <ArchiveMinusColor color='#FFFFFF' style={{ marginLeft: 18 }} />
+                    ) : (
+                      <ArchiveMinus color='#E74FB1' style={{ marginLeft: 18 }} />
+                    )}
                   </View>
-                  <Text style={[{
-                    marginLeft: 4,
-                    fontWeight: '600',
-                    fontFamily: 'Roboto-Medium',
-                    fontSize: 14,
-                    color: '#E74FB1'
-                  },
-                  { color: toggleLocationSaved ? '#FFFFFF' : '#E74FB1' }
-                  ]}>
+                  <Text
+                    style={[
+                      {
+                        marginLeft: 4,
+                        fontWeight: '600',
+                        fontFamily: 'Roboto-Medium',
+                        fontSize: 14,
+                        color: '#E74FB1'
+                      },
+                      { color: toggleLocationSaved ? '#FFFFFF' : '#E74FB1' }
+                    ]}
+                  >
                     Lưu
                   </Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity style={{ width: 100, height: 40, backgroundColor: '#E74FB11A', borderRadius: 20, flexDirection: 'row', alignItems: 'center', marginHorizontal: 16 }}>
                   <ShareColorIcon style={{ marginLeft: 16 }} />
                   <Text style={{ marginLeft: 4, fontWeight: '600', fontFamily: 'Roboto-Medium', fontSize: 14, color: '#E74FB1' }}>Chia sẻ</Text>

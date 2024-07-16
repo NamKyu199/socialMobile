@@ -18,11 +18,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const HomeScreen = ({ navigation }: any) => {
 
     const [selectedButton, setSelectedButton] = useState('interaction');
+    const [activeIndex, setActiveIndex] = useState(0);
     const [questions, setQuestions] = useState<any[]>([]);
     const [likeIds, setLikeIds] = useState<string[]>([]);
     const [voteCounts, setVoteCounts] = useState<{ [key: string]: number }>({});
-    const [activeIndex, setActiveIndex] = useState(0);
-    // Fetch questions and initialize state from API
+
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -37,7 +37,6 @@ const HomeScreen = ({ navigation }: any) => {
                 setLikeIds(initialLikeIds);
                 setVoteCounts(initialVoteCounts);
 
-                // Lưu trạng thái ban đầu vào AsyncStorage
                 await AsyncStorage.setItem('likeIds', JSON.stringify(initialLikeIds));
                 await AsyncStorage.setItem('voteCounts', JSON.stringify(initialVoteCounts));
             } catch (error: any) {
@@ -47,38 +46,32 @@ const HomeScreen = ({ navigation }: any) => {
         fetchQuestions();
     }, []);
 
-    // Update state and AsyncStorage on button press
-    const handlePress = async (values: any) => {
-        const isLiked = likeIds.includes(values.questionId);
-        let newLikeIds, newVoteCounts;
-
-        if (!isLiked) {
-            newLikeIds = [...likeIds, values.questionId];
-            newVoteCounts = { ...voteCounts, [values.questionId]: (voteCounts[values.questionId] || values.totalVotes) + 1 };
-        } else {
-            newLikeIds = likeIds.filter((item) => values.questionId !== item);
-            newVoteCounts = { ...voteCounts, [values.questionId]: voteCounts[values.questionId] - 1 };
-        }
-
-        setLikeIds(newLikeIds);
-        setVoteCounts(newVoteCounts);
-
-        // Lưu trạng thái mới vào AsyncStorage
-        await AsyncStorage.setItem('likeIds', JSON.stringify(newLikeIds));
-        await AsyncStorage.setItem('voteCounts', JSON.stringify(newVoteCounts));
-
+    const handleVoteQuestion = async (questionId: string) => {
         try {
             const accessToken = await AsyncStorage.getItem('accessToken');
-            const response = await axios.post('http://192.53.172.131:1050/community/vote-question/' + values.questionId, {}, {
+            await axios.put(`http://192.53.172.131:1050/community/vote-question/${questionId}`, {}, {
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': accessToken,
-                },
+                    'authorization': accessToken
+                }
             });
-            const result = response.data;
-            console.log('result:', result);
+
+            const isLiked = likeIds.includes(questionId);
+            const newLikeIds = isLiked
+                ? likeIds.filter((id) => id !== questionId)
+                : [...likeIds, questionId];
+            const newVoteCounts = {
+                ...voteCounts,
+                [questionId]: isLiked
+                    ? (voteCounts[questionId] || 0) - 1
+                    : (voteCounts[questionId] || 0) + 1
+            };
+
+            setLikeIds(newLikeIds);
+            setVoteCounts(newVoteCounts);
+            await AsyncStorage.setItem('likeIds', JSON.stringify(newLikeIds));
+            await AsyncStorage.setItem('voteCounts', JSON.stringify(newVoteCounts));
         } catch (error: any) {
-            console.error('Error:', error.message);
+            console.error('Error voting question:', error.message);
         }
     };
 
@@ -516,13 +509,14 @@ const HomeScreen = ({ navigation }: any) => {
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <View style={styles.from_heart}>
                                         <TouchableOpacity
+                                            key={item.questionId}
                                             style={[
                                                 styles.from_heart,
                                                 { backgroundColor: likeIds.includes(item.questionId) ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                                             ]}
                                             accessibilityLabel="Interested"
                                             accessibilityHint="Mark your interest for the event"
-                                            onPress={() => handlePress(item)}
+                                            onPress={() => handleVoteQuestion(item.questionId)}
                                         >
                                             <View>
                                                 {likeIds.includes(item.questionId) ? <ColorLikeOne /> : <LikeOne />}
