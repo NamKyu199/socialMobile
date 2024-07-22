@@ -15,15 +15,16 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(217, 217, 217, 1)',
         borderRadius: 12,
         alignItems: 'center',
-        position: 'absolute'
+        position: 'absolute',
+        zIndex: 99
     },
     autocompleteContainer: {
         flex: 1,
-        zIndex: 999, // Đảm bảo zIndex cao hơn các thành phần khác
+        zIndex: 999,
     },
     listView: {
         position: 'absolute',
-        top: 50, // Adjust as necessary to ensure the list view doesn't overlap with the search container
+        top: 50,
         zIndex: 2,
         backgroundColor: 'white',
     },
@@ -174,7 +175,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'rgba(255, 255, 255, 1)',
         fontFamily: 'Roboto-Bold',
-        textAlign: 'center'
+        textAlign: 'center',
+        letterSpacing: 0.4
     },
     careAbout: {
         borderRadius: 8,

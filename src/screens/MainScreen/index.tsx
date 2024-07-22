@@ -24,7 +24,7 @@ const MainScreen = ({ navigation }: any) => {
         }
         fetchUserId();
     })
-    
+
     const fetchAvatar = async () => {
         if (userId !== null) {
             try {
@@ -38,19 +38,21 @@ const MainScreen = ({ navigation }: any) => {
                 )
                 setAvatar(response.data.avatar)
             } catch (error: any) {
-                
+
             }
         }
     }
 
     useEffect(() => {
         fetchAvatar()
-    })
+    });
+
+    const [currentTab, setCurrentTab] = useState('');
 
     return (
         <>
             <Tab.Navigator initialRouteName="HomeScreen" screenOptions={{ headerShown: false }}>
-                <Tab.Screen name="HomeScreen" component={HomeScreen}  options={{
+                <Tab.Screen name="Trang chủ" component={HomeScreen} options={{
                     tabBarIcon: ({ focused }) => (
                         <Home2
                             variant={focused ? 'Bold' : 'Linear'}
@@ -60,7 +62,13 @@ const MainScreen = ({ navigation }: any) => {
                     tabBarLabel: 'Trang chủ',
                     tabBarActiveTintColor: 'rgba(231, 79, 177, 1)',
                     tabBarInactiveTintColor: 'rgba(173, 175, 178, 1)',
-                }} />
+                }}
+                    listeners={{
+                        tabPress: () => {
+                            setCurrentTab('Trang chủ');
+                        }
+                    }}
+                />
                 <Tab.Screen name="CommunityScreen" component={CommunityScreen} options={{
                     tabBarIcon: ({ focused }) => (
                         <People
@@ -95,9 +103,9 @@ const MainScreen = ({ navigation }: any) => {
                     tabBarInactiveTintColor: 'rgba(173, 175, 178, 1)',
                 }} />
                 <Tab.Screen name="ProfileScreen" component={ProfileScreen} options={{
-                    tabBarIcon: ({}) => (
+                    tabBarIcon: ({ }) => (
                         <View>
-                            <Image style={{width: 20, height: 20, borderRadius: 100}} source={{uri: avatar}} />
+                            <Image style={{ width: 20, height: 20, borderRadius: 100 }} source={{ uri: avatar }} />
                         </View>
                     ),
                     tabBarLabel: 'Hồ sơ',

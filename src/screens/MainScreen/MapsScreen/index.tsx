@@ -76,11 +76,9 @@ const MapsScreen = ({ navigation }: any) => {
 
   const [eventDetails, setEventDetails] = useState<any>(null);
   const [suggestedEvent, setSuggestedEvent] = useState([]);
-  const [pressedQuanTam, setPressedQuanTam] = useState(false);
   const [pressedSeThamGia, setPressedSeThamGia] = useState(false);
-  const [toggleLocationSaved, setToggleLocationSaved] = useState(false);
   const [locationSaveID, setLocationSaveID] = useState(null);
-  const [eventIds, setEventIds] = useState(null);
+  const [eventIds, setEventIds] = useState<any>(null);
 
   const handleShowModalEvent = async (eventId: any) => {
     try {
@@ -96,7 +94,6 @@ const MapsScreen = ({ navigation }: any) => {
       setEventDetails(eventResponse.data.event);
       setSuggestedEvent(suggestedResponse.data.events);
       setEventIds(eventId);
-      console.log('id:', eventId);
       setSelectedOption((prev) => ({ ...prev, showModalEvent: true }));
     } catch (error: any) {
       console.error('Error fetching event details or suggested events:', error.message);
@@ -106,10 +103,6 @@ const MapsScreen = ({ navigation }: any) => {
   useEffect(() => {
     const fetchPressedStates = async () => {
       try {
-        const quanTamValue = await AsyncStorage.getItem(`pressedQuanTam${eventIds}`);
-        if (quanTamValue !== null) {
-          setPressedQuanTam(JSON.parse(quanTamValue));
-        }
         const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${eventIds}`);
         if (seThamGiaValue !== null) {
           setPressedSeThamGia(JSON.parse(seThamGiaValue));
@@ -124,33 +117,8 @@ const MapsScreen = ({ navigation }: any) => {
     }
   }, [eventIds]);
 
-  const handleQuanTamPressMore = async () => {
-    try {
-      const accessToken = await AsyncStorage.getItem('accessToken');
-      const response = await axios.post(
-        `http://192.53.172.131:1050/home/toggleInterestEvent/${eventIds}`,
-        {},
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: accessToken,
-          },
-        }
-      );
-      const result = response.data;
-      console.log('Toggle pressedQuanTam Result:', result);
-      if (result.isInterested !== undefined) {
-        setPressedQuanTam(result.isInterested);
-        await AsyncStorage.setItem(`pressedQuanTam${eventIds}`, JSON.stringify(result.isInterested));
-      } else {
-        console.error('Invalid toggleInterestEvent response:', result);
-      }
-    } catch (error: any) {
-      console.error('Error toggling interest:', error.message);
-    }
-  };
-
   const [pressedQuanTamStates, setPressedQuanTamStates] = useState<{ [key: string]: boolean }>({});
+
   const handleQuanTamPress = async (eventId: string) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
@@ -180,6 +148,55 @@ const MapsScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleQuanTamPressMore = async (eventId: string) => {
+    try {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      const response = await axios.post(
+        `http://192.53.172.131:1050/home/toggleInterestEvent/${eventId}`,
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: accessToken,
+          },
+        }
+      );
+      const result = response.data;
+      console.log('Toggle pressedQuanTam Result:', result);
+      if (result.isInterested !== undefined) {
+        setPressedQuanTamStates((prevState) => ({
+          ...prevState,
+          [eventId]: result.isInterested,
+        }));
+        await AsyncStorage.setItem(`pressedQuanTam${eventId}`, JSON.stringify(result.isInterested));
+      } else {
+        console.error('Invalid toggleInterestEvent response:', result);
+      }
+    } catch (error: any) {
+      console.error('Error toggling interest:', error.message);
+    }
+  };
+
+  useEffect(() => {
+    const loadPressedQuanTamStates = async () => {
+      try {
+        const events = await AsyncStorage.getItem(`pressedQuanTam`);
+        if (events) {
+          const parsedEvents = JSON.parse(events);
+          const initialStates: { [key: string]: boolean } = {};
+          parsedEvents.forEach((event: any) => {
+            initialStates[event.id] = event.isInterested;
+          });
+          setPressedQuanTamStates(initialStates);
+        }
+      } catch (error: any) {
+        console.error('Error loading pressedQuanTam states:', error.message);
+      }
+    };
+
+    loadPressedQuanTamStates();
+  }, []);
+
   const handleSeThamGiaPress = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
@@ -206,6 +223,7 @@ const MapsScreen = ({ navigation }: any) => {
     }
   };
 
+  const [toggleLocationSaved, setToggleLocationSaved] = useState<boolean>(false);
   const handleSaveLocationPress = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
@@ -214,7 +232,7 @@ const MapsScreen = ({ navigation }: any) => {
         {},
         {
           headers: {
-            Authorization: accessToken,
+            'Authorization': accessToken,
           },
         }
       );
@@ -247,6 +265,7 @@ const MapsScreen = ({ navigation }: any) => {
     }
   }, [locationSaveID]);
 
+
   const handleOpenBottomSheetMore = async (item: any) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
@@ -278,7 +297,6 @@ const MapsScreen = ({ navigation }: any) => {
         showSaveLocation: false
       }));
       setLocationSaveID(item._id);
-      console.log(item._id);
     } catch (error: any) {
       console.error('Error fetching event details:', error.message);
     }
@@ -392,14 +410,7 @@ const MapsScreen = ({ navigation }: any) => {
       console.error('Error fetching events :', error.message);
     }
   };
-
-  const getCurrentDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
-
   moment.locale('vi');
-
   const formatVietnamDate = (utcDate: string) => {
     const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
     return vietnamDate.fromNow();
@@ -458,7 +469,57 @@ const MapsScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     fetchAvatar()
-  }, [])
+  }, []);
+
+  const [reviewData, setReviewData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const reviewResponse = await axios.get(`http://192.53.172.131:1050/map/summaryReview/${locationSaveID}`);
+        setReviewData(reviewResponse.data);
+      } catch (error: any) {
+        console.error('Error:', error.message);
+      }
+    };
+    fetchData();
+  }, [locationSaveID]);
+
+  const renderPercentageBars = () => {
+    if (!reviewData) return null;
+    const maxCount = Math.max(
+      reviewData.count5Stars,
+      reviewData.count4Stars,
+      reviewData.count3Stars,
+      reviewData.count2Stars,
+      reviewData.count1Star
+    );
+    const percentage5Stars = (reviewData.count5Stars / maxCount) * 100;
+    const percentage4Stars = (reviewData.count4Stars / maxCount) * 100;
+    const percentage3Stars = (reviewData.count3Stars / maxCount) * 100;
+    const percentage2Stars = (reviewData.count2Stars / maxCount) * 100;
+    const percentage1Star = (reviewData.count1Star / maxCount) * 100;
+
+    return (
+      <View style={{ width: PAGE_WIDTH * 0.6, marginLeft: 40 }}>
+        <View style={styles.spacer}>
+          <PercentageBar percentage={percentage5Stars} />
+        </View>
+        <View style={styles.spacer}>
+          <PercentageBar percentage={percentage4Stars} />
+        </View>
+        <View style={styles.spacer}>
+          <PercentageBar percentage={percentage3Stars} />
+        </View>
+        <View style={styles.spacer}>
+          <PercentageBar percentage={percentage2Stars} />
+        </View>
+        <View style={styles.spacer}>
+          <PercentageBar percentage={percentage1Star} />
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -538,8 +599,8 @@ const MapsScreen = ({ navigation }: any) => {
               region={{
                 latitude: position?.latitude || 20.984739466631968,
                 longitude: position?.longitude || 105.77560749913258,
-                latitudeDelta: 0.002,
-                longitudeDelta: 0.002,
+                latitudeDelta: 0.2,
+                longitudeDelta: 0.2,
               }}>
               {position?.latitude && position?.longitude && (
                 <Marker coordinate={{ latitude: position.latitude, longitude: position.longitude }}>
@@ -601,26 +662,27 @@ const MapsScreen = ({ navigation }: any) => {
                 <View style={{ borderRadius: 4, width: PAGE_WIDTH * 0.22, height: PAGE_HEIGHT * 0.17 }}>
                   <Image
                     source={{ uri: item.images[0] }}
-                    style={{ borderRadius: 4, maxWidth: '100%', height: '100%' }}
+                    style={{ borderRadius: 4, width: '100%', height: '100%' }}
                   />
                 </View>
                 <View style={{ gap: 4 }}>
-                  <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between'
-                  }}>
-                    <TouchableOpacity>
-                      <Text style={{
-                        fontWeight: '600',
-                        fontFamily: 'Roboto-Medium',
-                        fontSize: 16,
-                        color: '#1E1E1E',
-                        maxWidth: PAGE_WIDTH * 0.6
-                      }}>{item.name}</Text>
-                    </TouchableOpacity>
-                    <ArchiveSlash color='#974EC3' variant="Bold" size={20} style={{ marginLeft: 8 }} />
-                  </View>
-                  <Text style={{ fontFamily: 'Roboto-Light', fontWeight: '300', fontSize: 13 }}>{item.description}</Text>
+                  <TouchableOpacity onPress={() => handleOpenBottomSheetMore(item)}>
+                    <View style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between'
+                    }}>
+                      <Text
+                        style={{
+                          fontWeight: '600',
+                          fontFamily: 'Roboto-Medium',
+                          fontSize: 16,
+                          color: '#1E1E1E',
+                          maxWidth: PAGE_WIDTH * 0.6
+                        }}>{item.name}</Text>
+                      <ArchiveSlash color='#974EC3' variant="Bold" size={20} style={{ marginLeft: 8 }} />
+                    </View>
+                    <Text style={{ fontFamily: 'Roboto-Light', fontWeight: '300', fontSize: 13 }}>{item.description}</Text>
+                  </TouchableOpacity>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={styles.numberReview}>{item.averageRating}</Text>
                     <View style={styles.stars}>
@@ -674,50 +736,60 @@ const MapsScreen = ({ navigation }: any) => {
       {selectedOption.showEvent && (
         <View style={{ marginBottom: 30 }}>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-            {eventNews.map((item: any, index: number) => (
-              <View key={index} style={styles.from_backgroud_event}>
-                <Image source={{ uri: item?.image }} style={styles.background_envent} />
-                {item?.startDate === getCurrentDate() ? (
-                  <View style={styles.from_check_event}>
-                    <Text style={styles.heading_check_event}>Đang diễn ra</Text>
-                  </View>
-                ) : item?.startDate > getCurrentDate() ? (
-                  <View style={styles.from_check_event_process}>
-                    <Text style={styles.heading_check_event}>Sắp diễn ra</Text>
-                  </View>
-                ) : null}
-                <View style={styles.date_title}>
-                  <TouchableOpacity
-                    style={{ zIndex: 99 }}
-                    onPress={() => {
-                      const eventId = item.id;
-                      console.log('item:', eventId)
-                      handleShowModalEvent(eventId);
-                    }}>
-                    <Text style={styles.title_event1} numberOfLines={2}>{item?.nameEvent}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.careAbout,
-                      { backgroundColor: pressedQuanTamStates[item.id] ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
-                    ]}
-                    accessibilityLabel="Interested"
-                    accessibilityHint="Mark your interest for the event"
-                    onPress={() => handleQuanTamPress(item.id)}
-                  >
-                    <View style={styles.titleIcon}>
-                      {pressedQuanTamStates[item.id] ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
+            {eventNews.map((item: any, index: number) => {
+              const startDate = moment(item.startDate).tz('Asia/Ho_Chi_Minh');
+              const endDate = moment(item.endDate).tz('Asia/Ho_Chi_Minh');
+              const currentDate = moment().tz('Asia/Ho_Chi_Minh');
+
+              let status = '';
+              if (currentDate.isBefore(startDate)) {
+                status = 'Sắp diễn ra';
+              } else if (currentDate.isBetween(startDate, endDate, undefined, '[]')) {
+                status = 'Đang diễn ra';
+              }
+
+              return (
+                <View key={index} style={styles.from_backgroud_event}>
+                  <Image source={{ uri: item?.image }} style={styles.background_envent} />
+                  {status === 'Đang diễn ra' ? (
+                    <View style={styles.from_check_event}>
+                      <Text style={styles.heading_check_event}>Đang diễn ra</Text>
                     </View>
-                    <Text style={[
-                      styles.headingAbout,
-                      { color: pressedQuanTamStates[item.id] ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
-                    ]}>
-                      Quan tâm
-                    </Text>
-                  </TouchableOpacity>
+                  ) : status === 'Sắp diễn ra' ? (
+                    <View style={styles.from_check_event_process}>
+                      <Text style={styles.heading_check_event}>Sắp diễn ra</Text>
+                    </View>
+                  ) : null}
+                  <View style={styles.date_title}>
+                    <TouchableOpacity
+                      style={{ zIndex: 99 }}
+                      onPress={() => handleShowModalEvent(item.id)}
+                    >
+                      <Text style={styles.title_event1} numberOfLines={2}>{item?.nameEvent}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.careAbout,
+                        { backgroundColor: pressedQuanTamStates[item.id] ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                      ]}
+                      accessibilityLabel="Interested"
+                      accessibilityHint="Mark your interest for the event"
+                      onPress={() => handleQuanTamPress(item.id)}
+                    >
+                      <View style={styles.titleIcon}>
+                        {pressedQuanTamStates[item.id] ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
+                      </View>
+                      <Text style={[
+                        styles.headingAbout,
+                        { color: pressedQuanTamStates[item.id] ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
+                      ]}>
+                        Quan tâm
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
         </View>
       )}
@@ -739,10 +811,10 @@ const MapsScreen = ({ navigation }: any) => {
                 }}>
                   <TouchableOpacity onPress={() => handleOpenBottomSheetMore(item)}>
                     <Text style={styles.location}>{item.name}</Text>
+                    <Text style={styles.locationAdress}>{item.description}</Text>
                   </TouchableOpacity>
-                  <Text style={styles.locationAdress}>{item.description}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5, marginHorizontal: 20 }}>
-                    <Text style={styles.numberReview}>{item.averageRating}</Text>
+                    <Text style={styles.numberReview}>{(Math.round(item.averageRating * 10) / 10).toFixed(1)}</Text>
                     <View style={styles.stars}>
                       {[0.5, 1.5, 2.5, 3.5, 4.5].map((starIndex) => (
                         <View key={starIndex} style={{ marginLeft: starIndex === 0.5 ? 0 : 2 }}>
@@ -844,20 +916,20 @@ const MapsScreen = ({ navigation }: any) => {
                             justifyContent: 'center',
                             marginTop: 10,
                             paddingVertical: 10,
-                            paddingHorizontal: 20
+                            paddingHorizontal: 25,
                           },
-                          { backgroundColor: pressedQuanTam ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                          { backgroundColor: pressedQuanTamStates[eventIds] ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                         ]}
                         accessibilityLabel="Interested"
                         accessibilityHint="Mark your interest for the event"
-                        onPress={handleQuanTamPressMore}
+                        onPress={() => handleQuanTamPressMore(eventIds)}
                       >
                         <View style={styles.titleIcon}>
-                          {pressedQuanTam ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
+                          {pressedQuanTamStates[eventIds] ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
                         </View>
                         <Text style={[
                           styles.headingAbout,
-                          { color: pressedQuanTam ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
+                          { color: pressedQuanTamStates[eventIds] ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
                         ]}>
                           Quan tâm
                         </Text>
@@ -1066,23 +1138,23 @@ const MapsScreen = ({ navigation }: any) => {
               </TouchableOpacity>
               <Text style={styles.locationAdress}>{locations.description}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5, marginHorizontal: 20 }}>
-                <Text style={styles.numberReview}>{locations.averageRating}</Text>
+                <Text style={styles.numberReview}>
+                  {(Math.round(locations.averageRating * 10) / 10).toFixed(1)}
+                </Text>
                 <View style={styles.stars}>
-                  <View >
-                    {locations.averageRating >= 1 ? <ColorStar width={10} height={10} /> : <StarIcon width={10} height={10} />}
-                  </View>
-                  <View style={{ marginLeft: 2 }}>
-                    {locations.averageRating >= 2 ? <ColorStar width={10} height={10} /> : <StarIcon width={10} height={10} />}
-                  </View>
-                  <View style={{ marginLeft: 2 }}>
-                    {locations.averageRating >= 3 ? <ColorStar width={10} height={10} /> : <StarIcon width={10} height={10} />}
-                  </View>
-                  <View style={{ marginLeft: 2 }}>
-                    {locations.averageRating >= 4 ? <ColorStar width={10} height={10} /> : <StarIcon width={10} height={10} />}
-                  </View>
-                  <View style={{ marginLeft: 2 }}>
-                    {locations.averageRating >= 5 ? <ColorStar width={10} height={10} /> : <StarIcon width={10} height={10} />}
-                  </View>
+                  {[0.5, 1.5, 2.5, 3.5, 4.5].map((starIndex) => (
+                    <View key={starIndex} style={{ marginLeft: starIndex === 0.5 ? 0 : 2 }}>
+                      {locations.averageRating >= starIndex ? (
+                        locations.averageRating >= starIndex + 0.5 ? (
+                          <ColorStar width={10} height={10} />
+                        ) : (
+                          <HalfStar width={10} height={10} />
+                        )
+                      ) : (
+                        <StarIcon width={10} height={10} />
+                      )}
+                    </View>
+                  ))}
                 </View>
                 <Text style={styles.numberUserReview}>({locations.totalReviews})</Text>
               </View>
@@ -1209,7 +1281,7 @@ const MapsScreen = ({ navigation }: any) => {
                   <Text style={{ fontFamily: 'Roboto-Regular', fontWeight: '400', fontSize: 16, color: '#722ED1', borderBottomWidth: 1, paddingHorizontal: 10, borderColor: '#722ED1', paddingBottom: 20 }}>Tổng quan</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ marginRight: 100 }} onPress={() => {
-                  navigation.navigate('EvaluateScreen', { id: locations._id })
+                  navigation.navigate('EvaluateScreen', { id: locations })
                 }}>
                   <Text style={{ fontFamily: 'Roboto-Regular', fontWeight: '400', fontSize: 16, color: '#1E1E1E' }}>Đánh giá</Text>
                 </TouchableOpacity>
@@ -1277,42 +1349,26 @@ const MapsScreen = ({ navigation }: any) => {
                   <Text style={styles.title1}>Số lượt đánh giá</Text>
                   <View style={{ flexDirection: 'row', marginTop: 12 }}>
                     <View style={{ alignSelf: 'center', marginBottom: 15 }}>
-                      <Text style={{ alignSelf: 'center', fontSize: 20, fontWeight: '500', fontFamily: 'Roboto-Medium', color: '#1E1E1E' }}>{summaryReview.averageRating}</Text>
+                      <Text style={{ alignSelf: 'center', fontSize: 20, fontWeight: '500', fontFamily: 'Roboto-Medium', color: '#1E1E1E' }}>{(Math.round(locations.averageRating * 10) / 10).toFixed(1)}</Text>
                       <View style={styles.totalWrap}>
-                        <View>
-                          {summaryReview.averageRating >= 1 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                        </View>
-                        <View style={{ marginLeft: 5 }}>
-                          {summaryReview.averageRating >= 2 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                        </View>
-                        <View style={{ marginLeft: 5 }}>
-                          {summaryReview.averageRating >= 3 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                        </View>
-                        <View style={{ marginLeft: 5 }}>
-                          {summaryReview.averageRating >= 4 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                        </View>
-                        <View style={{ marginLeft: 5 }}>
-                          {summaryReview.averageRating >= 5 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                        </View>
+                        {[0.5, 1.5, 2.5, 3.5, 4.5].map((starIndex) => (
+                          <View key={starIndex} style={{ marginLeft: starIndex === 0.5 ? 0 : 2 }}>
+                            {summaryReview.averageRating >= starIndex ? (
+                              summaryReview.averageRating >= starIndex + 0.5 ? (
+                                <ColorStar width={15} height={15} />
+                              ) : (
+                                <HalfStar width={15} height={15} />
+                              )
+                            ) : (
+                              <StarIcon width={15} height={15} />
+                            )}
+                          </View>
+                        ))}
                       </View>
                       <Text style={{ alignSelf: 'center', color: '#ADAFB2', fontFamily: 'Roboto-Regular', fontWeight: '400' }}>({summaryReview.totalReviews})</Text>
                     </View>
-                    <View style={{ width: PAGE_WIDTH * 0.6, marginLeft: 40 }}>
-                      <View style={styles.spacer}>
-                        <PercentageBar percentage={95} />
-                      </View>
-                      <View style={styles.spacer}>
-                        <PercentageBar percentage={70} />
-                      </View>
-                      <View style={styles.spacer}>
-                        <PercentageBar percentage={50} />
-                      </View>
-                      <View style={styles.spacer}>
-                        <PercentageBar percentage={10} />
-                      </View>
-                      <View style={styles.spacer}>
-                        <PercentageBar percentage={30} />
-                      </View>
+                    <View>
+                      {renderPercentageBars()}
                     </View>
                   </View>
                 </View>
@@ -1325,7 +1381,7 @@ const MapsScreen = ({ navigation }: any) => {
                   </View>
                   <TouchableOpacity onPress={() => {
                     navigation.navigate('EvaluateScreen', {
-                      id: locations._id,
+                      id: locations,
                     })
                   }}
                     style={{
@@ -1408,7 +1464,7 @@ const MapsScreen = ({ navigation }: any) => {
                 ))}
                 <TouchableOpacity onPress={() => {
                   navigation.navigate('EvaluateScreen', {
-                    id: locations._id,
+                    id: locations,
                   })
                 }}>
                   <View style={{ backgroundColor: '#DDDDDD', height: 40, marginHorizontal: 16, borderRadius: 8, alignItems: 'center', marginBottom: 35, marginTop: 20 }}>

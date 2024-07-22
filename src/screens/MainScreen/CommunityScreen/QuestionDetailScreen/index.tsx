@@ -1,9 +1,8 @@
 import { ArrowDown2, ArrowUp2, Edit2, More, Trash } from "iconsax-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { FlatList, Image, Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, Image, Modal, Text, TouchableOpacity, View } from "react-native";
 import AppImage from "~utils/images/app_images";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet"
-import CommentItem from "~component/QuestionDetailCommentItem";
 import { QuestionAnswerModel } from "~models/QuestionAnswerModel";
 import { Canvas, Skia, Path } from "@shopify/react-native-skia";
 import QuestionDetailRepliesItem from "~component/QuestionDetailRepliesItem";
@@ -18,7 +17,7 @@ import QuestionAnswerAction from "./QuestionAnswerAction";
 import QuestionComment from "./QuestionComment";
 import { StatusTextInput } from "~constant/StatusTextInput";
 
-const QuestionDetailScreen = ({ navigation, route }: any) => {
+const QuestionDetailScreen = ({ route }: any) => {
     const { questionData } = route.params || { questionData: {} }
     const [viewInput, setViewInput] = useState<StatusTextInput>(StatusTextInput.DEFAULT);
     const [comment, setComment] = useState('');
@@ -27,7 +26,6 @@ const QuestionDetailScreen = ({ navigation, route }: any) => {
     const [questionRepliesAnswerData, setQuestionRepliesAnswerData] = useState<QuestionRepliesAnswerModel[]>([]);
     const bottomSheetAnswerRef = useRef<BottomSheetModal>(null);
 
-    const [showReplies, setShowReplies] = useState(false);
     const bottomSheetCommentRef = useRef<BottomSheetModal>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [itemHeight, setItemHeight] = useState(0);
@@ -43,7 +41,7 @@ const QuestionDetailScreen = ({ navigation, route }: any) => {
             setUserId(id)
         }
         fetchUserId()
-    }, [])
+    }, [])  
 
     const fetchQuestionAnswer = async (questionId: string) => {
         try {
@@ -83,7 +81,6 @@ const QuestionDetailScreen = ({ navigation, route }: any) => {
                     values.isVoted,
                 )
             )
-            console.log(response.data)
             setQuestionRepliesAnswerData(fetchedQuestionRepliesAnswer)
         } catch (error: any) {
 
@@ -260,7 +257,7 @@ const QuestionDetailScreen = ({ navigation, route }: any) => {
             }}>
                 <View style={{ flexDirection: 'column' }}>
                     <Image source={AppImage.avatar} style={{ width: 40, height: 40 }} />
-                    {showReplies && (
+                    {item.showReplies && (
                         <>
                             {item.totalRepliesAnswer !== 0 && (
                                 <Canvas style={{ flex: 1 }}>
@@ -373,19 +370,21 @@ const QuestionDetailScreen = ({ navigation, route }: any) => {
                         <TouchableOpacity
                             style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}
                             onPress={() => {
-                                setShowReplies(!showReplies)
+                                const updatedQuestionAnswerData = [...questionAnswerData];
+                                updatedQuestionAnswerData[index].showReplies = !item.showReplies;
+                                setQuestionAnswerData(updatedQuestionAnswerData);
                                 fetchQuestionRepliesAnswer(questionAnswerData[index].answerId);
                             }}
                         >
-                            {showReplies ? <ArrowUp2 size={20} color="rgba(53, 3, 173, 1)" variant="Bold" /> : <ArrowDown2 size={20} color="rgba(53, 3, 173, 1)" variant="Bold" />}
+                            {item.showReplies ? <ArrowUp2 size={20} color="rgba(53, 3, 173, 1)" variant="Bold" /> : <ArrowDown2 size={20} color="rgba(53, 3, 173, 1)" variant="Bold" />}
                             <Text>
-                                {item.totalRepliesAnswer !== 0 ? item.totalRepliesAnswer + ' MORE' : 'MORE'}
+                                {item.totalRepliesAnswer !== 0 ? item.totalRepliesAnswer + ' Phản hồi' : 'Phản hồi'}
                             </Text>
                         </TouchableOpacity>
                     )}
                 </View>
             </View>
-            {showReplies && (
+            {item.showReplies && (
                 <QuestionDetailRepliesItem
                     questionRepliesAnswerData={questionRepliesAnswerData}
                     totalRepliesAnswer={item.totalRepliesAnswer}
@@ -412,22 +411,21 @@ const QuestionDetailScreen = ({ navigation, route }: any) => {
                 onChangeText={setComment}
                 statusTextInput={viewInput}
                 onFocus={() => {
-                    console.log('Focus AC')
-                    setViewInput(StatusTextInput.COMMENT)}}
+                    setViewInput(StatusTextInput.COMMENT)
+                }}
                 onCancel={() => setViewInput(StatusTextInput.DEFAULT)}
                 onClick={() => {
                     console.log(action)
-                    switch(action) {
+                    switch (action) {
                         case StatusTextInput.COMMENT:
+                            setAction(StatusTextInput.COMMENT);
+                            break;
+                        case StatusTextInput.EDIT:
                             setAction(StatusTextInput.EDIT);
                             break;
-                    }
-                    if (action === StatusTextInput.COMMENT) {
-                        setAction(StatusTextInput.COMMENT)
-                        AnswerToQuestion(questionData.questionId)
-                        setViewInput(StatusTextInput.DEFAULT)
-                    } else if (StatusTextInput.EDIT) {
-                        
+                        case StatusTextInput.REPLIES:
+                            setAction(StatusTextInput.REPLIES);
+                            break;
                     }
                 }}
             />

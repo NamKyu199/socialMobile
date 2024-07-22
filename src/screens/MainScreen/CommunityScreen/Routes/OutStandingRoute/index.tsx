@@ -2,29 +2,21 @@ import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
-import { Archive, Edit2, Trash, ArchiveSlash } from "iconsax-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { FlatList, Image, Modal, Text, TouchableOpacity, View } from "react-native"
-import ContentCard from "~component/QuestionContent";
-import SocialActions from "~component/QuestionActions";
+import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native"
+import QuestionContent from "~component/QuestionContent";
+import QuestionHeader from "~component/QuestionHeader";
+import QuestionActions from "~component/QuestionActions";
 import { QuestionModel } from "~models/QuestionModel";
 import { BASE_URL } from "~services/ApiBaseUrl";
-import AppImage from "~utils/images/app_images";
-import { Mores } from "~utils/images/svg";
-import QuestionHeader from "~component/QuestionHeader";
+import { ArchiveSlash, Archive, Edit2, Trash } from "iconsax-react-native";
+import styles from "./style";
 
-const OutStandingRoute = ({ navigation }: any) => {
+const NewestRoute = ({ navigation }: any) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [questionData, setQuestionData] = useState<QuestionModel[]>([]);
     const [userId, setUserId] = useState<string | null>(null);
     const bottomSheetQuestionRefs = useRef<(BottomSheetModal | null)[]>([]);
-    const colors = [
-        'rgba(171, 81, 228, 1)',
-        'rgba(114, 46, 209, 1)',
-        'rgba(105, 24, 165, 1)',
-        'rgba(74, 10, 120, 1)',
-        'rgba(49, 0, 84, 1)',
-    ];
 
     useEffect(() => {
         const fetchUserId = async () => {
@@ -57,6 +49,7 @@ const OutStandingRoute = ({ navigation }: any) => {
                         value.createdAt,
                         value.userId,
                         value.username,
+                        value.avatar,
                         value.totalVotes,
                         value.totalViews,
                         value.totalShares,
@@ -75,12 +68,6 @@ const OutStandingRoute = ({ navigation }: any) => {
             }
         }
     };
-
-    useFocusEffect(
-        useCallback(() => {
-            fetchQuestions();
-        }, [userId])
-    );
 
     const handleDeleteQuestion = async (questionId: string) => {
         try {
@@ -140,7 +127,9 @@ const OutStandingRoute = ({ navigation }: any) => {
                     }
                 }
             )
+            updateSaveStatus(true, questionId)
             console.log(response.data.message)
+
         } catch (error: any) {
 
         }
@@ -157,17 +146,37 @@ const OutStandingRoute = ({ navigation }: any) => {
                     }
                 }
             )
+            updateSaveStatus(true, questionId)
             console.log(response.data.message)
         } catch (error: any) {
 
         }
     }
 
+    const updateSaveStatus = (isSave: boolean, questionId: string) => {
+        const updatedQuestions = questionData.map(question => {
+            if (question.questionId === questionId) {
+                // const newIsVoted = !question.isVoted;
+                // const newTotalVotes = newIsVoted ? question.totalVotes + 1 : question.totalVotes - 1;
+                return { ...question, isSaved: isSave };
+
+            }
+            return question;
+        });
+        setQuestionData(updatedQuestions);
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchQuestions();
+        }, [userId])
+    );
+
     const renderQuestionItem = (item: QuestionModel, index: number) => (
         <>
-            <View key={item.questionId} style={{ backgroundColor: 'rgba(255, 255, 255, 1)', paddingHorizontal: 16, paddingBottom: 36 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <QuestionHeader 
+            <View key={item.questionId} style={styles.view}>
+                <View style={styles.row}>
+                    <QuestionHeader
                         item={item}
                         index={index}
                         bottomSheetQuestionRefs={bottomSheetQuestionRefs}
@@ -252,22 +261,23 @@ const OutStandingRoute = ({ navigation }: any) => {
                         </BottomSheetView>
                     </BottomSheetModal>
                 </View>
-                <ContentCard item={item}/>
-                <View style={{ borderWidth: 0.4, borderColor: 'rgba(215, 215, 215, 0.8)', marginVertical: 8 }}></View>
-                <SocialActions item={item} handleVoteQuestion={handleVoteQuestion}/>
+                <QuestionContent item={item} />
+                <View style={styles.line} />
+                <QuestionActions item={item} handleVoteQuestion={handleVoteQuestion} />
             </View>
         </>
     )
+
     return (
         <>
             <FlatList
                 data={questionData}
                 renderItem={({ item, index }) => renderQuestionItem(item, index)}
                 keyExtractor={(item) => item.questionId.toString()}
-                style={{ backgroundColor: 'rgba(255, 255, 255, 1)', paddingTop: 16 }}
+                style={styles.container}
             />
         </>
     )
 }
 
-export default OutStandingRoute;
+export default NewestRoute;

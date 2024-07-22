@@ -10,9 +10,9 @@ import QuestionActions from "~component/QuestionActions";
 import { QuestionModel } from "~models/QuestionModel";
 import { BASE_URL } from "~services/ApiBaseUrl";
 import { ArchiveSlash, Archive, Edit2, Trash } from "iconsax-react-native";
-import styles from "./style";
+import styles from "./styles";
 
-const NewestRoute = ({ navigation }: any) => {
+const InteresteComponent = ({ navigation }: any) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [questionData, setQuestionData] = useState<QuestionModel[]>([]);
     const [userId, setUserId] = useState<string | null>(null);
@@ -31,14 +31,13 @@ const NewestRoute = ({ navigation }: any) => {
         if (userId !== null) {
             try {
                 const accessToken = await AsyncStorage.getItem('accessToken')
-                const response = await axios.get(`${BASE_URL}community/all-questions`,
+                const response = await axios.get(`${BASE_URL}community/trending-questions`,
                     {
                         headers: {
                             'authorization': accessToken
                         }
                     }
                 );
-                // if (response.data && response.data.questionsInfo && Array.isArray(response.data.questionsInfo)) {
                 const fetchedQuestions = response.data.questionsInfo.map(
                     (value: any) => new QuestionModel(
                         value.questionId,
@@ -57,12 +56,9 @@ const NewestRoute = ({ navigation }: any) => {
                         value.isVoted,
                         value.isSaved,
                     )
-                );
+                ).slice(0, 5);
                 setQuestionData(fetchedQuestions);
                 bottomSheetQuestionRefs.current = fetchedQuestions.map(() => null);
-                // } else {
-                //     console.error('Unexpected response data format:', response.data);
-                // }
             } catch (error) {
                 console.error('Error fetching questions:', error);
             }
@@ -156,10 +152,7 @@ const NewestRoute = ({ navigation }: any) => {
     const updateSaveStatus = (isSave: boolean, questionId: string) => {
         const updatedQuestions = questionData.map(question => {
             if (question.questionId === questionId) {
-                // const newIsVoted = !question.isVoted;
-                // const newTotalVotes = newIsVoted ? question.totalVotes + 1 : question.totalVotes - 1;
                 return { ...question, isSaved: isSave };
-
             }
             return question;
         });
@@ -271,6 +264,7 @@ const NewestRoute = ({ navigation }: any) => {
     return (
         <>
             <FlatList
+                scrollEnabled={false}
                 data={questionData}
                 renderItem={({ item, index }) => renderQuestionItem(item, index)}
                 keyExtractor={(item) => item.questionId.toString()}
@@ -280,4 +274,4 @@ const NewestRoute = ({ navigation }: any) => {
     )
 }
 
-export default NewestRoute;
+export default InteresteComponent;

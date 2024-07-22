@@ -1,5 +1,6 @@
 import { ParamListBase, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import moment from "moment";
 import React from "react";
 import { View, TouchableOpacity, Image, Text } from "react-native";
 import AppImage from "~utils/images/app_images";
@@ -15,7 +16,7 @@ const QuestionAnswerHeader = ({questionData}: any) => {
                     <TouchableOpacity onPress={() => navigation.goBack()}>
                         <Image source={AppImage.leftArrowIcon} style={{ width: 7.67, height: 13.31, marginRight: 16 }} />
                     </TouchableOpacity>
-                    <Image source={AppImage.avatar} />
+                    <Image source={{uri: questionData.avatar}} style={{width: 40, height: 40, borderRadius: 100}}/>
                     <View style={{ marginLeft: 12, flexDirection: 'column', alignSelf: 'stretch' }}>
                         <Text style={{ fontSize: 14, fontWeight: '700', letterSpacing: 0.1, color: 'rgba(30, 30, 30, 1)', lineHeight: 21 }}>
                             {questionData.username}
@@ -27,7 +28,8 @@ const QuestionAnswerHeader = ({questionData}: any) => {
                                 </Text>
                             </View>
                             <Text style={{ fontSize: 12, fontWeight: '500', color: 'rgba(204, 204, 204, 1)', lineHeight: 14.06, marginLeft: 4 }}>
-                                {questionData.createdAt}
+                                {/* {questionData.createdAt} */}
+                                {moment.utc(questionData.createdAt).tz('Asia/Ho_Chi_Minh').format('DD-MM-YYYY HH:mm:ss')}
                             </Text>
                         </View>
                     </View>
