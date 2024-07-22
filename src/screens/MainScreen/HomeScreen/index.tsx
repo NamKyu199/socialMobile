@@ -4,8 +4,6 @@ import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import Carousel from 'react-native-reanimated-carousel';
 import styles from "./styles";
 import { useSharedValue } from "react-native-reanimated";
-import { Eye, More } from "iconsax-react-native";
-import { ColorLikeOne, LikeOne } from "~utils/images/svg";
 import axios from "axios";
 import TabberComponent from "~component/TabberComponent";
 import AppImage from "~utils/images/app_images";
@@ -13,69 +11,16 @@ import { fontFamilies } from "~constant/fontFamilies";
 import LinearGradient from 'react-native-linear-gradient';
 import moment from 'moment-timezone';
 import 'moment/locale/vi';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import InteresteComponent from "~component/InteresteComponent";
+import { useRoute } from "@react-navigation/native";
 
 const HomeScreen = ({ navigation }: any) => {
-
+    const route = useRoute();
+    const currentTabName = route.name;
+    const PAGE_WIDTH = Dimensions.get('window').width;
+    const PAGE_HEIGHT = Dimensions.get('window').height;
     const [selectedButton, setSelectedButton] = useState('interaction');
     const [activeIndex, setActiveIndex] = useState(0);
-    const [questions, setQuestions] = useState<any[]>([]);
-    const [likeIds, setLikeIds] = useState<string[]>([]);
-    const [voteCounts, setVoteCounts] = useState<{ [key: string]: number }>({});
-
-    useEffect(() => {
-        const fetchQuestions = async () => {
-            try {
-                const response = await axios.get('http://192.53.172.131:1050/community/trending-questions');
-                const questionsData = response.data.questionsInfo;
-                const initialLikeIds = questionsData.filter((item: any) => item.isVoted).map((item: any) => item.questionId);
-                const initialVoteCounts = questionsData.reduce((acc: any, item: any) => {
-                    acc[item.questionId] = item.totalVotes;
-                    return acc;
-                }, {});
-                setQuestions(questionsData);
-                setLikeIds(initialLikeIds);
-                setVoteCounts(initialVoteCounts);
-
-                await AsyncStorage.setItem('likeIds', JSON.stringify(initialLikeIds));
-                await AsyncStorage.setItem('voteCounts', JSON.stringify(initialVoteCounts));
-            } catch (error: any) {
-                console.error('Error fetching questions:', error.message);
-            }
-        };
-        fetchQuestions();
-    }, []);
-
-    const handleVoteQuestion = async (questionId: string) => {
-        try {
-            const accessToken = await AsyncStorage.getItem('accessToken');
-            await axios.put(`http://192.53.172.131:1050/community/vote-question/${questionId}`, {}, {
-                headers: {
-                    'authorization': accessToken
-                }
-            });
-
-            const isLiked = likeIds.includes(questionId);
-            const newLikeIds = isLiked
-                ? likeIds.filter((id) => id !== questionId)
-                : [...likeIds, questionId];
-            const newVoteCounts = {
-                ...voteCounts,
-                [questionId]: isLiked
-                    ? (voteCounts[questionId] || 0) - 1
-                    : (voteCounts[questionId] || 0) + 1
-            };
-
-            setLikeIds(newLikeIds);
-            setVoteCounts(newVoteCounts);
-            await AsyncStorage.setItem('likeIds', JSON.stringify(newLikeIds));
-            await AsyncStorage.setItem('voteCounts', JSON.stringify(newVoteCounts));
-        } catch (error: any) {
-            console.error('Error voting question:', error.message);
-        }
-    };
-
-    const hashtagColors = ['rgba(171, 81, 228, 1)', 'rgba(114, 46, 209, 1)', 'rgba(105, 24, 165, 1)', 'rgba(74, 10, 120, 1)', 'rgba(49, 0, 84, 1)'];
     const TopExpertColors = [
         { colors: ['#FFEB7A', '#FFD32F'], useGradient: true },
         { colors: ['#DFE0D0', '#C9CAB7'], useGradient: true },
@@ -110,7 +55,6 @@ const HomeScreen = ({ navigation }: any) => {
                 return null;
         }
     };
-
     const renderRankView = (index: number) => {
         if (index > 2 && index <= 20) {
             return (
@@ -132,21 +76,12 @@ const HomeScreen = ({ navigation }: any) => {
         }
         return null;
     };
-
-    const PAGE_WIDTH = Dimensions.get('window').width;
-    const PAGE_HEIGHT = Dimensions.get('window').height;
-
     const progressValue = useSharedValue<number>(0);
     const baseOptions = {
         vertical: false,
         width: PAGE_WIDTH,
         height: PAGE_WIDTH * 0.6,
     } as const;
-
-    const handleImagePress = (item: any) => {
-        navigation.navigate('DetailsNewsScreen', { item })
-    };
-
     const [toptrending, setToptrendinh] = useState([]);
     useEffect(() => {
         const fetchToptreding = async () => {
@@ -160,7 +95,6 @@ const HomeScreen = ({ navigation }: any) => {
         };
         fetchToptreding();
     }, []);
-
     const [views, setViews] = useState([]);
     useEffect(() => {
         const fetchViews = async () => {
@@ -173,7 +107,6 @@ const HomeScreen = ({ navigation }: any) => {
         };
         fetchViews();
     }, []);
-
     const [interaction, setInteraction] = useState([]);
     useEffect(() => {
         const fetchInterctions = async () => {
@@ -187,7 +120,6 @@ const HomeScreen = ({ navigation }: any) => {
 
         fetchInterctions();
     }, []);
-
     const [eventNews, setEventNews] = useState([]);
     useEffect(() => {
         const fetchEventNews = async () => {
@@ -201,11 +133,6 @@ const HomeScreen = ({ navigation }: any) => {
         };
         fetchEventNews();
     }, []);
-
-    const getCurrentDate = () => {
-        return moment().tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD');
-    };
-
     moment.locale('vi');
     const formatVietnamDateMore = (utcDate: any) => {
         const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
@@ -224,13 +151,8 @@ const HomeScreen = ({ navigation }: any) => {
         };
         return `${vietnameseDaysOfWeek[dayOfWeek]}, ${day} THÁNG ${month} NĂM ${year}`;
     };
-    const formatVietnamDate = (utcDate: string) => {
-        const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
-        return vietnamDate.fromNow();
-    };
-
     return (
-        <ScrollView>
+        <ScrollView style={{ backgroundColor: '#FFFFFF' }}>
             <TabberComponent />
             {/* Các tin tức đang chú í nhất */}
             <View style={{ marginTop: 20 }}>
@@ -256,19 +178,21 @@ const HomeScreen = ({ navigation }: any) => {
                         mode="parallax"
                         data={toptrending.slice(0, 5)}
                         renderItem={({ item, index }: any) => (
-                            <TouchableWithoutFeedback key={index} onPress={() => handleImagePress(item)}>
+                            <TouchableWithoutFeedback key={index} onPress={() => navigation.navigate('DetailsNewsScreen', { item, currentTabName })}>
                                 <View style={styles.imageContainer}>
-                                    {item.coverImage && item.coverImage ? (
-                                        <Image
-                                            style={styles.style_image}
-                                            source={{ uri: item.coverImage }}
-                                        />
-                                    ) : (
-                                        <Image
-                                            style={styles.style_image}
-                                            source={AppImage.PosterNewsHome}
-                                        />
-                                    )}
+                                    <View>
+                                        {item.coverImage && item.coverImage ? (
+                                            <Image
+                                                style={styles.style_image}
+                                                source={{ uri: item.coverImage }}
+                                            />
+                                        ) : (
+                                            <Image
+                                                style={styles.style_image}
+                                                source={AppImage.PosterNewsHome}
+                                            />
+                                        )}
+                                    </View>
                                     <View style={styles.overlayContainer}>
                                         <Text numberOfLines={2} style={styles.overlayText}>{item.title}</Text>
                                     </View>
@@ -307,7 +231,7 @@ const HomeScreen = ({ navigation }: any) => {
             </View>
             {/* Các tin tức đang chú í nhất */}
             {/* Bảng xếp hạng các chuyên gia */}
-            <View style={{ marginTop: 30, marginHorizontal: 15 }}>
+            <View style={{ marginTop: 30 }}>
                 <Text style={styles.header_heading}>Bảng xếp hạng chuyên gia</Text>
                 <View style={[styles.from_top]}>
                     <View style={{ flex: 1 }}>
@@ -325,7 +249,7 @@ const HomeScreen = ({ navigation }: any) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <View style={{ flexDirection: 'row', marginHorizontal: 20, marginTop: 20 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, marginBottom: 10, marginHorizontal: 24 }}>
                     <Text style={styles.header_chart1}>Hạng</Text>
                     <Text style={styles.header_chart2}>Tên</Text>
                     {selectedButton === 'interaction' && (
@@ -336,7 +260,7 @@ const HomeScreen = ({ navigation }: any) => {
                     )}
                 </View>
                 {selectedButton === 'interaction' && (
-                    <ScrollView style={{ height: 400 }}>
+                    <ScrollView style={{ height: 400, backgroundColor: '#F8F8F8', paddingHorizontal: 16 }}>
                         {interaction && interaction.slice(0, 20).map((item: any, index: any) => {
                             const backgroundColor = TopExpertColors[index % TopExpertColors.length];
                             return (
@@ -352,11 +276,11 @@ const HomeScreen = ({ navigation }: any) => {
                                             // @ts-ignore
                                             colors={backgroundColor.colors}
                                             start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 1 }}
+                                            end={{ x: 0.6, y: 0.6 }}
                                             style={[StyleSheet.absoluteFill, { borderRadius: 8 }]}
                                         />
                                     )}
-                                    <View style={{ width: PAGE_WIDTH * 0.12, height: PAGE_HEIGHT * 0.06, marginLeft: 15 }}>
+                                    <View style={{ width: PAGE_WIDTH * 0.12, height: PAGE_HEIGHT * 0.06, marginLeft: 12 }}>
                                         {index < 3 && <Image source={checkRank(index)} style={styles.top_Medal} />}
                                         {index >= 3 && renderRankView(index)}
                                         <Image source={{ uri: item.avatar }} style={{ width: '100%', height: '100%', borderRadius: 8 }} />
@@ -369,7 +293,7 @@ const HomeScreen = ({ navigation }: any) => {
                     </ScrollView>
                 )}
                 {selectedButton === 'view' && (
-                    <ScrollView style={{ height: 400 }}>
+                    <ScrollView style={{ height: 400, paddingHorizontal: 16, backgroundColor: '#F8F8F8' }}>
                         {views && views.slice(0, 20).map((item: any, index: any) => {
                             const backgroundColor = TopExpertColors[index % TopExpertColors.length];
                             return (
@@ -382,7 +306,6 @@ const HomeScreen = ({ navigation }: any) => {
                                 >
                                     {backgroundColor.useGradient && (
                                         <LinearGradient
-                                            // @ts-ignore
                                             colors={backgroundColor.colors}
                                             start={{ x: 0, y: 0 }}
                                             end={{ x: 1, y: 1 }}
@@ -399,8 +322,15 @@ const HomeScreen = ({ navigation }: any) => {
                                 </View>
                             );
                         })}
+
                     </ScrollView>
                 )}
+                <LinearGradient
+                    colors={['rgba(255, 255, 255, 0)', 'rgba(100, 99, 99, 0.22)']}
+                    start={{ x: 1, y: 0.1 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: 'absolute', bottom: 0, width: '100%', height: 58 }}
+                />
             </View>
             {/* End of Bảng xếp hạng các chuyên gia */}
             {/* Sự kiện */}
@@ -412,145 +342,85 @@ const HomeScreen = ({ navigation }: any) => {
                     </TouchableOpacity>
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {eventNews.map((item: any, index: any) => (
-                        <View key={index} style={styles.from_backgroud_event}>
-                            <View style={styles.imageContainer}>
-                                <Image source={{ uri: item.image }} style={styles.background_envent} />
-                                <View style={styles.overlayContainer}>
-                                    {moment(item.startDate).tz('Asia/Ho_Chi_Minh').format('YYYY-MM-DD') === getCurrentDate() ? (
-                                        <>
-                                            <View style={styles.from_check_event}>
-                                                <Text style={styles.heading_check_event}>Đang diễn ra</Text>
-                                            </View>
-                                            <View style={styles.date_title}>
-                                                <View style={styles.body_date}>
-                                                    <Text style={styles.month}>{item.specificMonth}</Text>
-                                                    <Text style={{ fontWeight: '700', fontSize: 32, color: 'rgba(231, 79, 177, 1)', alignSelf: 'center' }}>{item.specificDay}</Text>
+                    {eventNews.map((item: any, index: any) => {
+                        const startDate = moment(item.startDate).tz('Asia/Ho_Chi_Minh');
+                        const endDate = moment(item.endDate).tz('Asia/Ho_Chi_Minh');
+                        const currentDate = moment().tz('Asia/Ho_Chi_Minh');
+
+                        let status = '';
+                        if (currentDate.isBefore(startDate)) {
+                            status = 'Sắp diễn ra';
+                        } else if (currentDate.isBetween(startDate, endDate, undefined, '[]')) {
+                            status = 'Đang diễn ra';
+                        }
+
+                        return (
+                            <View key={index} style={styles.from_backgroud_event}>
+                                <View style={styles.imageContainer}>
+                                    <Image source={{ uri: item.image }} style={styles.background_envent} />
+                                    <View style={styles.overlayContainer}>
+                                        {status === 'Đang diễn ra' && (
+                                            <>
+                                                <View style={styles.from_check_event}>
+                                                    <Text style={styles.heading_check_event}>Đang diễn ra</Text>
                                                 </View>
-                                                <View style={{ justifyContent: 'center', width: PAGE_WIDTH * 0.6 }}>
+                                                <View style={styles.date_title}>
+                                                    <View style={styles.body_date}>
+                                                        <Text style={styles.month}>{item.specificMonth}</Text>
+                                                        <Text style={styles.day}>{item.specificDay}</Text>
+                                                    </View>
+                                                    <View style={{ justifyContent: 'center', width: PAGE_WIDTH * 0.6 }}>
+                                                        <TouchableOpacity style={{ zIndex: 99, flexGrow: 1 }} onPress={() => { navigation.navigate('DetailsEventScreen', { item }) }}>
+                                                            <Text style={styles.title_event1} numberOfLines={2}>{item.nameEvent}</Text>
+                                                            <Text style={styles.interested_participate1}>{item.interestedUsers} người quan tâm - {item.participantUsers} người sẽ tham gia</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+                                            </>
+                                        )}
+                                        {status === 'Sắp diễn ra' && (
+                                            <>
+                                                <View style={styles.from_check_event_process}>
+                                                    <Text style={styles.heading_check_event}>Sắp diễn ra</Text>
+                                                </View>
+                                                <View style={styles.date_title}>
                                                     <TouchableOpacity style={{ zIndex: 99, flexGrow: 1 }} onPress={() => { navigation.navigate('DetailsEventScreen', { item }) }}>
-                                                        <Text style={styles.title_event1} numberOfLines={2}>{item.nameEvent}</Text>
+                                                        <Text style={{ fontFamily: fontFamilies.back, fontWeight: '700', fontSize: 10, color: '#FFFFFF', marginLeft: 10 }}>{formatVietnamDateMore(item.startDate)}</Text>
+                                                        <Text style={{ marginLeft: 10, fontWeight: '700', fontSize: 16, color: 'rgba(255, 255, 255, 1)', fontFamily: 'Roboto-Bold', letterSpacing: 0.4 }} numberOfLines={2}>{item.nameEvent}</Text>
                                                         <Text style={styles.interested_participate1}>{item.interestedUsers} người quan tâm - {item.participantUsers} người sẽ tham gia</Text>
                                                     </TouchableOpacity>
                                                 </View>
-                                            </View>
-                                        </>
-                                    ) : moment(item.startDate).tz('Asia/Ho_Chi_Minh').isAfter(moment().tz('Asia/Ho_Chi_Minh'), 'day') ? (
-                                        <>
-                                            <View style={styles.from_check_event_process}>
-                                                <Text style={styles.heading_check_event}>Sắp diễn ra</Text>
-                                            </View>
-                                            <View style={styles.date_title}>
-                                                <TouchableOpacity style={{ zIndex: 99, flexGrow: 1 }} onPress={() => { navigation.navigate('DetailsEventScreen', { item }) }}>
-                                                    <Text style={{ fontFamily: fontFamilies.back, fontWeight: '700', fontSize: 10, color: '#FFFFFF', marginLeft: 10 }}>{formatVietnamDateMore(item.startDate)}</Text>
-                                                    <Text style={{ marginLeft: 10, fontWeight: '700', fontSize: 16, color: 'rgba(255, 255, 255, 1)', fontFamily: 'Roboto-Bold' }} numberOfLines={2}>{item.nameEvent}</Text>
-                                                    <Text style={styles.interested_participate1}>{item.interestedUsers} người quan tâm - {item.participantUsers} người sẽ tham gia</Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        </>
-                                    ) : null}
+                                            </>
+                                        )}
+                                    </View>
+                                </View>
+                                <View style={{
+                                    marginTop: 15,
+                                    marginRight: 5,
+                                    zIndex: 1,
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    width: PAGE_WIDTH * 0.09,
+                                    height: 36
+                                }}>
+                                    <TouchableOpacity>
+                                        <Image source={AppImage.share} style={styles.shareIcon} />
+                                    </TouchableOpacity>
                                 </View>
                             </View>
-                            <View style={{
-                                marginTop: 15,
-                                marginRight: 5,
-                                zIndex: 1,
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                width: PAGE_WIDTH * 0.09,
-                                height: 36
-                            }}>
-                                <TouchableOpacity>
-                                    <Image source={AppImage.share} style={styles.shareIcon} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    ))}
+                        );
+                    })}
                 </ScrollView>
             </View>
             {/* Sự kiện */}
             {/* Những cậu hỏi đáng được quan tâm */}
             <View style={{ paddingBottom: 60 }}>
-                <View style={{ paddingBottom: 60 }}>
-                    <Text style={styles.header_topComment}>Top câu hỏi được quan tâm</Text>
-                    {questions.slice(0, 5).map((item: any, index: any) => (
-                        <View key={index} style={styles.from_question}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Image source={AppImage.avatar} />
-                                <View style={{ marginLeft: 12 }}>
-                                    <Text style={styles.name_user}>{item.username}</Text>
-                                    <Text style={styles.time_question}>{formatVietnamDate(item.createdAt)}</Text>
-                                </View>
-                                <TouchableOpacity style={{ position: 'absolute', right: 0, bottom: 18 }}>
-                                    <More />
-                                </TouchableOpacity>
-                            </View>
-                            <View>
-                                <TouchableOpacity onPress={() => navigation.navigate('QuestionDetailScreen', { questionData: item })}>
-                                    <Text style={styles.title_question}>{item.title}</Text>
-                                </TouchableOpacity>
-                                <Text style={styles.title_summary}>{item.description}</Text>
-                                {item.images.slice(0, 1).map((images: any, index: any) => (
-                                    <View key={index} style={{ width: PAGE_WIDTH * 0.92, height: PAGE_HEIGHT * 0.3, marginTop: 5, borderRadius: 8, alignItems: 'center' }}>
-                                        <Image source={{ uri: images }} style={styles.background_envent} />
-                                    </View>
-                                ))}
-                            </View>
-                            <View style={styles.hashtag}>
-                                {item.topic.slice(0, 3).map((topic: any, idx: any) => (
-                                    <View key={idx} style={[styles.from_hashtag, { backgroundColor: hashtagColors[idx % hashtagColors.length] }]}>
-                                        <Text style={styles.heading_hashtag}>#{topic}</Text>
-                                    </View>
-                                ))}
-                            </View>
-                            <View style={styles.tabfooter}></View>
-                            <View style={styles.footer}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <View style={styles.from_heart}>
-                                        <TouchableOpacity
-                                            key={item.questionId}
-                                            style={[
-                                                styles.from_heart,
-                                                { backgroundColor: likeIds.includes(item.questionId) ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
-                                            ]}
-                                            accessibilityLabel="Interested"
-                                            accessibilityHint="Mark your interest for the event"
-                                            onPress={() => handleVoteQuestion(item.questionId)}
-                                        >
-                                            <View>
-                                                {likeIds.includes(item.questionId) ? <ColorLikeOne /> : <LikeOne />}
-                                            </View>
-                                            <Text
-                                                style={[
-                                                    styles.icon_heart,
-                                                    { color: likeIds.includes(item.questionId) ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
-                                                ]}
-                                            >
-                                                {voteCounts[item.questionId] || item.totalVotes}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <TouchableOpacity style={{ flexDirection: 'row', marginLeft: 24, alignSelf: 'center' }} onPress={() => navigation.navigate('QuestionDetailScreen', { questionData: item })}>
-                                        <Image source={AppImage.commentIcon} />
-                                        <Text style={styles.number_comment}>{item.totalAnswers}</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity>
-                                        <Image source={AppImage.shareIcon} />
-                                    </TouchableOpacity>
-                                </View>
-                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Eye size={16} color="rgba(150, 143, 143, 1)" />
-                                    <Text style={styles.number_eye}>{item.totalViews}</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    ))}
-                </View>
+                <Text style={styles.header_topComment}>Top câu hỏi được quan tâm</Text>
+                <InteresteComponent />
             </View>
             {/* Những cậu hỏi đáng được quan tâm */}
         </ScrollView>
     )
 }
-
 export default HomeScreen;

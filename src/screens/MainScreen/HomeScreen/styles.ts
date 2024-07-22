@@ -7,12 +7,13 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 20,
         color: 'rgba(30, 30, 30, 1)',
-        fontFamily: fontFamilies.bold
+        fontFamily: fontFamilies.bold,
+        paddingHorizontal: 15
     },
     from_header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginHorizontal:16
+        marginHorizontal: 16
     },
     header_hyperlink: {
         color: 'rgba(210, 82, 165, 1)',
@@ -34,22 +35,21 @@ const styles = StyleSheet.create({
         fontFamily: 'Roboto-Medium',
         fontSize: 14,
         color: 'rgba(30, 30, 30, 1)',
-        marginLeft: 55,
+        marginRight:'auto',
+        marginLeft:50
     },
     header_chart4: {
         fontWeight: '700',
         fontSize: 14,
         color: 'rgba(30, 30, 30, 1)',
         fontFamily: 'Roboto-Bold',
-        // marginHorizontal:'auto'
-        marginRight: 'auto',
-        marginLeft: 32
+        marginRight:'auto',
+        marginLeft:24
     },
     header_chart3: {
         fontWeight: '500',
         fontSize: 14,
         color: 'rgba(30, 30, 30, 1)',
-        marginLeft: 'auto',
         fontFamily: 'Roboto-Medium',
     },
     header_chart5: {
@@ -98,18 +98,18 @@ const styles = StyleSheet.create({
     overlayContainer: {
         ...StyleSheet.absoluteFillObject,
         justifyContent: 'flex-end',
-        backgroundColor: 'rgba(0, 0, 0, 0.25)',
         borderRadius: 15,
+        backgroundColor: 'rgba(0, 0, 0, 0.18)',
     },
     overlayText: {
         color: '#FFFFFF',
         fontSize: 20,
         fontWeight: '700',
         fontFamily: fontFamilies.medium,
-        backgroundColor: 'transparent',
         marginHorizontal: 12,
         marginBottom: 12,
-        lineHeight: 25
+        lineHeight: 25,
+        letterSpacing: 0.4
     },
     from_top: {
         backgroundColor: 'rgba(114, 46, 209, 1)',
@@ -117,7 +117,8 @@ const styles = StyleSheet.create({
         marginTop: 15,
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 5
+        padding: 5,
+        marginHorizontal: 15
     },
     from_gold_Medal: {
         flexDirection: 'row',
@@ -126,16 +127,12 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         borderRadius: 10,
         justifyContent: 'space-between',
-        // paddingLeft:20,
-        // paddingRight:40,
     },
     top_Medal: {
         position: 'absolute',
         zIndex: 1,
         top: 0,
         left: -8,
-        height: 28,
-        width: 16
     },
     ontop_Medal: {
         position: 'absolute',
@@ -154,18 +151,20 @@ const styles = StyleSheet.create({
         fontSize: 12
     },
     header_topComment: {
-        marginTop: 30,
+        paddingTop: 30,
         marginLeft: 15,
         fontWeight: '600',
         fontSize: 16,
         color: 'rgba(96, 96, 96, 1)',
-        fontFamily: 'Roboto-Bold'
+        fontFamily: 'Roboto-Bold',
+        paddingBottom: 12,
+        backgroundColor:'#F8F8F8'
     },
     from_backgroud_event: {
         marginTop: 15,
         height: PAGE_HEIGHT * 0.3,
         width: PAGE_WIDTH * 0.85,
-        marginHorizontal:10,
+        marginHorizontal: 10,
         position: 'relative',
     },
     background_envent: {
@@ -176,8 +175,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'black',
     },
     shareIcon: {
-        width:'100%',
-        height:'100%'
+        width: '100%',
+        height: '100%'
     },
     from_check_event: {
         marginTop: 20,
@@ -220,6 +219,7 @@ const styles = StyleSheet.create({
         color: 'rgba(255, 255, 255, 1)',
         fontFamily: 'Roboto-Bold',
         backgroundColor: 'transparent',
+        letterSpacing: 0.4
     },
     interested_participate1: {
         marginLeft: 10,
@@ -362,22 +362,29 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between'
     },
     body_date: {
-        paddingTop: 10,
-        paddingBottom: 7,
-        paddingHorizontal: 3,
-        width: PAGE_WIDTH * 0.2,
-        height: '100%',
         borderRadius: 8,
         backgroundColor: 'rgba(240, 240, 240, 1)',
         alignSelf: 'center',
+        width: 66,
+        height: 67,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal:3,
+        paddingTop:6
     },
     month: {
         fontWeight: '500',
         fontSize: 12,
         color: 'rgba(30, 30, 30, 1)',
-        alignSelf: 'center',
+        textAlign: 'center',
         fontFamily: 'Roboto-Regular',
-        textAlign:'center'
+        marginBottom:-5
     },
+    day: {
+        fontWeight: '700',
+        fontSize: 32,
+        color: 'rgba(231, 79, 177, 1)',
+        textAlign: 'center'
+    }
 })
 export default styles;

@@ -36,7 +36,6 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
     });
 
     const [suggestedEvent, setSuggestedEvent] = useState([]);
-    const [error, setError] = useState(null);
     const PAGE_WIDTH = Dimensions.get('window').width;
     const PAGE_HEIGHT = Dimensions.get('window').height;
 
@@ -144,7 +143,6 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
                 }
             } catch (error: any) {
                 console.error('Error fetching events:', error.message);
-                setError(error.message);
             }
         };
 

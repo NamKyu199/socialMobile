@@ -1,13 +1,18 @@
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import AppImage from "~utils/images/app_images";
 import { Mores } from "~utils/images/svg";
 import styles from "./style";
+import moment from "moment";
 
 const QuestionHeader = ({ item, index, bottomSheetQuestionRefs }: any) => {
+
+    const formatVietnamDate = (utcDate: string) => {
+        const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
+        return vietnamDate.fromNow();
+    };
     return (
         <>
-            <Image source={{uri: item.avatar}} style={{width: 40, height: 40, borderRadius: 100}}/>
+            <Image source={{ uri: item.avatar }} style={{ width: 40, height: 40, borderRadius: 100 }} />
             <View style={{ marginLeft: 12 }}>
                 <Text style={styles.username}>
                     {item.username}
@@ -19,7 +24,7 @@ const QuestionHeader = ({ item, index, bottomSheetQuestionRefs }: any) => {
                         </Text>
                     </View>
                     <Text style={styles.time}>
-                        {item.createdAt}
+                        {formatVietnamDate(item.createdAt)}
                     </Text>
                 </View>
             </View>

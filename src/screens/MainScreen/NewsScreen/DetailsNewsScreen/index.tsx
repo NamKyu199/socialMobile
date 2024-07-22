@@ -7,110 +7,167 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { ColorLikeOne, LikeOne } from "~utils/images/svg";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import moment from "moment";
+import moment from 'moment-timezone';
+import 'moment/locale/vi';
 import HTML from 'react-native-render-html';
 
 const DetailsNewsScreen = ({ route, navigation }: any) => {
 
     const { item } = route.params;
-    console.log('data:', item)
-    const [pressed, setPressed] = useState(false);
-    const [likeIcon, setLikeIcon] = useState(<LikeOne />);
+    const { currentTabName } = route.params;
     const PAGE_WIDTH = Dimensions.get('window').width;
     const PAGE_HEIGHT = Dimensions.get('window').height;
+    const [pressedLike, setPressedLike] = useState(false);
+    const [news, setNews] = useState({
+        "newsId": '',
+        "title": '',
+        "topic": [''],
+        "description": '',
+        "coverImage": '',
+        "createdAt": '',
+        "totalLikes": '',
+        "totalViews": '',
+        "totalShares": '',
+        "isLiked": '',
+    });
+    const [newMore, setNewMore] = useState([]);
 
-    const handlePress = async () => {
-        const newPressed = !pressed;
-        setPressed(newPressed);
-
-        const newLikeIcon = likeIcon.type === ColorLikeOne ? <LikeOne /> : <ColorLikeOne />;
-        setLikeIcon(newLikeIcon);
-
+    const [newids, setNewids] = useState(null);
+    const handleLikePress = async () => {
         try {
-            const accessToken = await AsyncStorage.getItem('accessToken')
-            const response = await axios.put('http://192.53.172.131:1050/news/like-news/' + item.newsId,
+            const accessToken = await AsyncStorage.getItem('accessToken');
+            const response = await axios.put(
+                `http://192.53.172.131:1050/news/like-news/${newids}`,
                 {},
                 {
                     headers: {
-                        'authorization': accessToken
-                    }
-                }
-            )
+                        'Authorization': accessToken,
+                    },
+                },
+            );
+            const result = response.data;
+            console.log('Toggle PressedLike Result:', result);
+            if (result.isLiked !== undefined) {
+                setPressedLike(result.isLiked);
+                await AsyncStorage.setItem(`pressedLike${newids}`, JSON.stringify(result.isLiked));
+            } else {
+                console.error('Invalid like-news response:', result);
+            }
         } catch (error: any) {
-            console.error('Error', error.message);
+            console.error('Error Like News:', error.message);
         }
     };
 
-    const [toptrending, setToptrendinh] = useState([]);
     useEffect(() => {
-        const fetchNews = async () => {
+        const fetchPressedLike = async () => {
             try {
-                const response = await axios.get('http://192.53.172.131:1050/news/trending-news');
-                setToptrendinh(response.data.newsInfo);
-                console.log(response.data.newsInfo.images)
-            }
-            catch (error: any) {
-                console.error('Error fetching News :', error.message)
+                const likeValue = await AsyncStorage.getItem(`pressedLike${newids}`);
+                if (likeValue !== null) {
+                    setPressedLike(JSON.parse(likeValue));
+                }
+            } catch (error: any) {
+                console.error('Error fetching pressed states from AsyncStorage:', error.message);
             }
         };
-        fetchNews();
-    }, []);
 
-    const formatVietnamDate = (utcDate: string): string => {
+        fetchPressedLike();
+    }, [newids]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get(`http://192.53.172.131:1050/news/news/${item.newsId}`);
+                if (response.data && response.data.newsInfo) {
+                    const fetchedNews = response.data.newsInfo;
+                    setNews(fetchedNews);
+                    setPressedLike(fetchedNews.isLiked);
+                    setNewids(item.newsId);
+                    const fetchedNewMore = response.data.sameTypeNewsInfo
+                    setNewMore(fetchedNewMore)
+                    await AsyncStorage.setItem(`pressedLike${item.newsId}`, JSON.stringify(fetchedNews.isLiked));
+                } else {
+                    console.error('Invalid response structure', response.data);
+                }
+            } catch (error: any) {
+                console.error('Error fetching data:', error.message);
+            }
+        };
+
+        fetchData();
+    }, [item.newsId]);
+
+    moment.locale('vi');
+    const daysOfWeek = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+    const formatVietnamDateMore = (utcDate: string): string => {
         const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
-        const formattedDate = vietnamDate.format('DD/MM/YYYY');
-        return formattedDate;
+        const dayOfWeek = daysOfWeek[vietnamDate.day()];
+        const formattedDate = vietnamDate.format('DD/MM/YYYY HH:mm');
+        return `${dayOfWeek}, ${formattedDate}`;
     };
+
+    const formatVietnamDate = (utcDate: string) => {
+        const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
+        return vietnamDate.fromNow();
+    };
+    const hashtagColors = ['rgba(171, 81, 228, 1)', 'rgba(114, 46, 209, 1)', 'rgba(105, 24, 165, 1)', 'rgba(74, 10, 120, 1)', 'rgba(49, 0, 84, 1)'];
+    const { width: contentWidth } = useWindowDimensions();
+    const isValidImageUri = (uri: any) => uri && uri.trim() !== '';
 
     return (
         <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', marginTop: 20, marginLeft: 20, marginBottom: 20 }}>
+            <View style={{ flexDirection: 'row', marginTop: 20, marginBottom: 16, width: PAGE_WIDTH * 0.8, marginHorizontal: 16 }}>
                 <TouchableOpacity>
-                    <Text style={{ fontWeight: '400', fontSize: 16, lineHeight: 17, color: 'rgba(89, 89, 89, 1)', fontFamily: 'Roboto-Regular' }}>Home</Text>
+                    <Text style={{ fontWeight: '400', fontSize: 14, lineHeight: 17, color: 'rgba(89, 89, 89, 1)', fontFamily: 'Roboto-Regular' }}>{currentTabName}</Text>
                 </TouchableOpacity>
-                <Text style={{ fontWeight: '400', fontSize: 16, lineHeight: 17, color: 'rgba(89, 89, 89, 1)', marginLeft: 7, marginRight: 5, fontFamily: 'Roboto-Regular' }}>{">"}</Text>
-                <Text style={{ fontWeight: '400', fontSize: 16, lineHeight: 17, color: 'plum', fontFamily: 'Roboto-Regular' }}>Câu chuyện về Midu</Text>
+                <Text style={{ fontWeight: '400', fontSize: 14, lineHeight: 17, color: 'rgba(89, 89, 89, 1)', marginLeft: 7, marginRight: 5, fontFamily: 'Roboto-Regular' }}>{">"}</Text>
+                <Text style={{ fontWeight: '400', fontSize: 14, lineHeight: 17, color: 'rgba(231, 79, 177, 1)', fontFamily: 'Roboto-Regular', letterSpacing: 0.4 }}>{news.title}</Text>
             </View>
             <ScrollView>
-                <Image source={{ uri: item.coverImage }} style={{ height: 250, width: '100%' }} />
+                {isValidImageUri(news.coverImage) && (
+                    <Image source={{ uri: news.coverImage }} style={{ height: 250, width: '100%' }} />
+                )}
                 <View style={{ backgroundColor: '#FFFFFF', paddingBottom: 20, paddingHorizontal: 20 }}>
                     <View style={{ marginTop: 20 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                             <View style={{ flexDirection: 'row' }}>
                                 <Clock color="#A6A6A6" size={14} />
-                                <Text style={{ fontWeight: '400', fontSize: 12, lineHeight: 15, marginLeft: 5, fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
+                                <Text style={{ fontWeight: '400', fontSize: 12, lineHeight: 15, marginLeft: 5, fontFamily: 'Roboto-Regular' }}>{formatVietnamDateMore(news.createdAt)}</Text>
                             </View>
                             <View style={{ flexDirection: 'row', marginRight: 40 }}>
                                 <Image source={AppImage.userIcon} style={{ height: 14, width: 14 }} />
                                 <Text style={{ fontWeight: '400', fontSize: 12, lineHeight: 15, marginLeft: 5, fontFamily: 'Roboto-Regular' }}>Midu Team</Text>
                             </View>
                         </View>
-                        <View style={{ flexDirection: 'row', marginTop: 20 }}>
-                            <View style={{ backgroundColor: '#AB51E4', borderRadius: 16 }}>
-                                <Text style={{ alignSelf: 'center', color: '#FFFFFF', fontWeight: '500', fontSize: 13, paddingHorizontal: 10, fontFamily: 'Roboto-Medium', marginHorizontal: 12, marginVertical: 6 }}>#{item.topic[0]}</Text>
-                            </View>
-                            <View style={{ backgroundColor: '#722ED1', borderRadius: 16, marginHorizontal: 5 }}>
-                                <Text style={{ alignSelf: 'center', color: '#FFFFFF', fontWeight: '500', fontSize: 13, fontFamily: 'Roboto-Medium', marginHorizontal: 12, marginVertical: 6 }}>#{item.topic[1]}</Text>
-                            </View>
-                            <View style={{ backgroundColor: 'rgba(105, 24, 165, 1)', borderRadius: 16 }}>
-                                <Text style={{ alignSelf: 'center', color: '#FFFFFF', fontWeight: '500', fontSize: 13, fontFamily: 'Roboto-Medium', marginHorizontal: 12, marginVertical: 6 }}>#{item.topic[2]}</Text>
-                            </View>
+                        <View style={{ marginTop: 8, flexDirection: 'row' }}>
+                            {item.topic.slice(0, 3).map((topic: any, idx: any) => (
+                                <View key={idx} style={[styles.hastag1, { backgroundColor: hashtagColors[idx % hashtagColors.length] }]}>
+                                    <Text style={styles.headingHastag}>#{topic}</Text>
+                                </View>
+                            ))}
                         </View>
                     </View>
-                    <HTML source={{ html: item.description }} />
+                    <View style={{ marginTop: 10 }}>
+                        <HTML source={{ html: news.description }} contentWidth={contentWidth} />
+                    </View>
                 </View>
                 <View style={{ marginTop: 30 }}>
-                    <Text style={{ borderLeftWidth: 6, paddingLeft: 15, borderColor: 'rgba(151, 78, 195, 1)', fontWeight: '600', fontSize: 22, lineHeight: 30, color: 'rgba(30, 30, 30, 1)', fontFamily: 'Roboto-Medium' }}>Tin cùng chuyên mục</Text>
-                    {toptrending.slice(0, 10).map((item: any, index: any) => (
+                    <View style={{ borderLeftWidth: 6, marginLeft: 16, borderColor: 'rgba(151, 78, 195, 1)', }}>
+                        <Text style={{ fontWeight: '600', fontSize: 22, lineHeight: 30, color: 'rgba(30, 30, 30, 1)', fontFamily: 'Roboto-Medium', marginLeft: 8 }}>Tin cùng chuyên mục</Text>
+                    </View>
+                    {newMore.map((news: any, index: any) => (
                         <View key={index} style={styles.fromEventNew}>
-                            <Image key={index} source={{ uri: item.coverImage }} style={{ width: PAGE_WIDTH * 0.4, height: PAGE_HEIGHT * 0.13, borderRadius: 8 }} />
+                            <View>
+                                <Image key={index} source={{ uri: news.coverImage }} style={{ width: PAGE_WIDTH * 0.4, height: PAGE_HEIGHT * 0.13, borderRadius: 8 }} />
+                                <View style={styles.overlay} />
+                            </View>
                             <View style={{ width: PAGE_WIDTH * 0.5 }}>
                                 <TouchableOpacity style={{ flexGrow: 1 }}>
-                                    <Text numberOfLines={4} style={styles.titleEvent2}>{item.title}</Text>
+                                    <Text numberOfLines={4} style={styles.titleEvent2}>{news.title}</Text>
                                 </TouchableOpacity>
-                                <View style={{ flexDirection: 'row', marginLeft: 20, marginTop: 'auto' }}>
+                                <View style={{ flexDirection: 'row', marginTop: 'auto', marginLeft: 8 }}>
                                     <Image source={AppImage.date} style={{ marginRight: 5 }} />
-                                    <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(item.createdAt)}</Text>
+                                    <Text style={{ fontWeight: '400', fontSize: 12, color: 'rgba(166, 166, 166, 1)', fontFamily: 'Roboto-Regular' }}>{formatVietnamDate(news.createdAt)}</Text>
                                 </View>
                             </View>
                         </View>
@@ -121,14 +178,14 @@ const DetailsNewsScreen = ({ route, navigation }: any) => {
                 <TouchableOpacity
                     style={[
                         styles.from_heart,
-                        { backgroundColor: pressed ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                        { backgroundColor: pressedLike ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                     ]}
                     accessibilityLabel="Interested"
-                    accessibilityHint="Mark your interest for the event"
-                    onPress={handlePress}
+                    accessibilityHint="Mark your interest for the News"
+                    onPress={handleLikePress}
                 >
                     <View style={{ alignSelf: 'center', marginTop: 17 }}>
-                        {likeIcon}
+                        {pressedLike ? <ColorLikeOne /> : <LikeOne />}
                     </View>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ backgroundColor: '#F2F2F2', height: PAGE_HEIGHT * 0.06, width: PAGE_WIDTH * 0.2, borderRadius: 20, marginTop: 25 }}>
@@ -139,7 +196,7 @@ const DetailsNewsScreen = ({ route, navigation }: any) => {
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', marginTop: 35 }}>
                     <Eye size="25" color="rgba(150, 143, 143, 1)" style={{ marginRight: 5 }} />
-                    <Text style={{ fontWeight: '400', fontSize: 16, lineHeight: 18, marginTop: 4, fontFamily: 'Roboto-Regular', marginRight: 5 }}>{item.totalViews}</Text>
+                    <Text style={{ fontWeight: '400', fontSize: 16, lineHeight: 18, marginTop: 4, fontFamily: 'Roboto-Regular', marginRight: 5 }}>{news.totalViews}</Text>
                     <Text style={{ fontWeight: '400', fontSize: 16, lineHeight: 18, marginTop: 4, fontFamily: 'Roboto-Regular' }}>Người xem</Text>
                 </View>
             </View>

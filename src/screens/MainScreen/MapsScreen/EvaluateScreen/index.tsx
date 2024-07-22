@@ -3,7 +3,7 @@ import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { Animated, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AppImage from '~utils/images/app_images';
-import { ColorStar, StarIcon } from '~utils/images/svg';
+import { ColorStar, HalfStar, StarIcon } from '~utils/images/svg';
 import 'moment/locale/vi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '~services/ApiBaseUrl';
@@ -16,21 +16,21 @@ const EvaluateScreen = ({ route, navigation }: any) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const reviewResponse = await axios.get(`http://192.53.172.131:1050/map/summaryReview/${id}`);
+                const reviewResponse = await axios.get(`http://192.53.172.131:1050/map/summaryReview/${id._id}`);
                 setReviewData(reviewResponse.data);
-                const voteResponse = await axios.get(`http://192.53.172.131:1050/map/formattedReviews/${id}`);
+                const voteResponse = await axios.get(`http://192.53.172.131:1050/map/formattedReviews/${id._id}`);
                 setVoteDetail(voteResponse.data.reviews);
             } catch (error: any) {
                 console.error('Error:', error.message);
             }
         };
         fetchData();
-    }, [id]);
+    }, [id._id]);
 
     const PAGE_WIDTH = Dimensions.get('window').width;
     const PAGE_HEIGHT = Dimensions.get('window').height;
 
-    const PercentageBar = ({ starText, percentage }: any) => {
+    const PercentageBar = ({ percentage }: any) => {
         const [animation] = useState(new Animated.Value(0));
         useEffect(() => {
             return Animated.timing(animation, {
@@ -60,7 +60,7 @@ const EvaluateScreen = ({ route, navigation }: any) => {
         );
     };
 
-    moment.locale('vi'); // Set the locale to Vietnamese
+    moment.locale('vi');
 
     const formatVietnamDate = (utcDate: string) => {
         const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
@@ -82,7 +82,43 @@ const EvaluateScreen = ({ route, navigation }: any) => {
 
     useEffect(() => {
         fetchAvatar()
-    }, [])
+    }, []);
+
+    const renderPercentageBars = () => {
+        if (!reviewData) return null;
+        const maxCount = Math.max(
+            reviewData.count5Stars,
+            reviewData.count4Stars,
+            reviewData.count3Stars,
+            reviewData.count2Stars,
+            reviewData.count1Star
+        );
+        const percentage5Stars = (reviewData.count5Stars / maxCount) * 100;
+        const percentage4Stars = (reviewData.count4Stars / maxCount) * 100;
+        const percentage3Stars = (reviewData.count3Stars / maxCount) * 100;
+        const percentage2Stars = (reviewData.count2Stars / maxCount) * 100;
+        const percentage1Star = (reviewData.count1Star / maxCount) * 100;
+
+        return (
+            <View style={{ width: PAGE_WIDTH * 0.6, marginLeft: 40 }}>
+                <View style={styles.spacer}>
+                    <PercentageBar percentage={percentage5Stars} />
+                </View>
+                <View style={styles.spacer}>
+                    <PercentageBar percentage={percentage4Stars} />
+                </View>
+                <View style={styles.spacer}>
+                    <PercentageBar percentage={percentage3Stars} />
+                </View>
+                <View style={styles.spacer}>
+                    <PercentageBar percentage={percentage2Stars} />
+                </View>
+                <View style={styles.spacer}>
+                    <PercentageBar percentage={percentage1Star} />
+                </View>
+            </View>
+        );
+    };
 
     return (
         <ScrollView style={{ marginBottom: 20, backgroundColor: '#FFFFFF' }}>
@@ -90,7 +126,7 @@ const EvaluateScreen = ({ route, navigation }: any) => {
                 <TouchableOpacity onPress={() => { navigation.goBack() }}>
                     <Image source={AppImage.leftArrowIcon} style={{ width: 15, height: 20, marginHorizontal: 24, marginTop: 25, marginBottom: 10 }} />
                 </TouchableOpacity>
-                <Text style={{ marginTop: 20, fontFamily: 'Roboto-Regular', fontSize: 18, fontWeight: '400', color: '#1E1E1E' }}>Công ty Midu</Text>
+                <Text style={{ marginTop: 20, fontFamily: 'Roboto-Regular', fontSize: 18, fontWeight: '400', color: '#1E1E1E' }}>{id.name}</Text>
             </View>
             <View style={{ flexDirection: 'row', height: 40, marginTop: 26, justifyContent: 'space-between', borderBottomWidth: 1, borderColor: '#DDDDDDCC' }}>
                 <TouchableOpacity style={{ marginLeft: 30 }} onPress={() => { navigation.goBack() }}>
@@ -105,42 +141,26 @@ const EvaluateScreen = ({ route, navigation }: any) => {
                     <Text style={styles.title}>Số lượt đánh giá</Text>
                     <View style={{ flexDirection: 'row', marginTop: 12 }}>
                         <View style={{ alignSelf: 'center', marginBottom: 15 }}>
-                            <Text style={{ alignSelf: 'center', fontSize: 20, fontWeight: '500', fontFamily: 'Roboto-Medium', color: '#1E1E1E' }}>{reviewData.averageRating}</Text>
+                            <Text style={{ alignSelf: 'center', fontSize: 20, fontWeight: '500', fontFamily: 'Roboto-Medium', color: '#1E1E1E' }}>{(Math.round(reviewData.averageRating * 10) / 10).toFixed(1)}</Text>
                             <View style={styles.totalWrap}>
-                                <View>
-                                    {reviewData.averageRating >= 1 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                </View>
-                                <View style={{ marginLeft: 5 }}>
-                                    {reviewData.averageRating >= 2 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                </View>
-                                <View style={{ marginLeft: 5 }}>
-                                    {reviewData.averageRating >= 3 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                </View>
-                                <View style={{ marginLeft: 5 }}>
-                                    {reviewData.averageRating >= 4 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                </View>
-                                <View style={{ marginLeft: 5 }}>
-                                    {reviewData.averageRating >= 5 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                </View>
+                                {[0.5, 1.5, 2.5, 3.5, 4.5].map((starIndex) => (
+                                    <View key={starIndex} style={{ marginLeft: starIndex === 0.5 ? 0 : 2 }}>
+                                        {reviewData.averageRating >= starIndex ? (
+                                            reviewData.averageRating >= starIndex + 0.5 ? (
+                                                <ColorStar width={15} height={15} />
+                                            ) : (
+                                                <HalfStar width={15} height={15} />
+                                            )
+                                        ) : (
+                                            <StarIcon width={15} height={15} />
+                                        )}
+                                    </View>
+                                ))}
                             </View>
                             <Text style={{ alignSelf: 'center', color: '#ADAFB2', fontFamily: 'Roboto-Regular', fontWeight: '400' }}>({reviewData.totalReviews})</Text>
                         </View>
-                        <View style={{ width: PAGE_WIDTH * 0.6, marginLeft: 40 }}>
-                            <View style={styles.spacer}>
-                                <PercentageBar percentage={95} />
-                            </View>
-                            <View style={styles.spacer}>
-                                <PercentageBar percentage={70} />
-                            </View>
-                            <View style={styles.spacer}>
-                                <PercentageBar percentage={50} />
-                            </View>
-                            <View style={styles.spacer}>
-                                <PercentageBar percentage={10} />
-                            </View>
-                            <View style={styles.spacer}>
-                                <PercentageBar percentage={30} />
-                            </View>
+                        <View>
+                            {renderPercentageBars()}
                         </View>
                     </View>
                 </View>
@@ -151,7 +171,7 @@ const EvaluateScreen = ({ route, navigation }: any) => {
                     <View style={{ width: PAGE_WIDTH * 0.12, height: PAGE_HEIGHT * 0.06 }}>
                         <Image source={{ uri: userAvatar.avatar }} style={{ width: '100%', height: '100%', borderRadius: 50 }} />
                     </View>
-                    <TouchableOpacity onPress={() => navigation.navigate('CreateReviewsScreen', { id: id })}
+                    <TouchableOpacity onPress={() => navigation.navigate('CreateReviewsScreen', { id: id._id })}
                         style={{
                             flex: 1,
                             borderWidth: 1,
@@ -169,57 +189,55 @@ const EvaluateScreen = ({ route, navigation }: any) => {
             <View style={{ marginTop: 20 }}>
                 <Text style={{ marginHorizontal: 16, fontWeight: '500', fontFamily: 'Roboto-Medium', fontSize: 16, color: '#1E1E1E' }}>Bài đánh giá</Text>
                 {voteDetail.map((item: any, index: number) => (
-                    <View style={{ borderBottomWidth: 1, paddingBottom: 20, borderColor: '#DDDDDDCC', marginTop: 22, marginHorizontal: 16 }}>
-                        <View key={index}>
-                            <View style={{ flexDirection: 'row' }}>
-                                <View style={{ width: PAGE_WIDTH * 0.12, height: PAGE_HEIGHT * 0.06 }}>
-                                    <Image source={{ uri: item.avatar }} style={{ width: '100%', height: '100%', borderRadius: 50 }} />
-                                </View>
-                                <View style={{ marginLeft: 10 }}>
-                                    <Text style={{ fontWeight: '500', fontFamily: 'Roboto-Medium', fontSize: 14, color: '#1E1E1E' }}>{item.fullName}</Text>
-                                    <View style={{ flexDirection: 'row', marginTop: 5 }}>
-                                        <View>
-                                            {item.rating >= 1 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                        </View>
-                                        <View style={{ marginLeft: 5 }}>
-                                            {item.rating >= 2 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                        </View>
-                                        <View style={{ marginLeft: 5 }}>
-                                            {item.rating >= 3 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                        </View>
-                                        <View style={{ marginLeft: 5 }}>
-                                            {item.rating >= 4 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                        </View>
-                                        <View style={{ marginLeft: 5 }}>
-                                            {item.rating >= 5 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
-                                        </View>
-                                        <Text style={{ marginLeft: 4, fontWeight: '500', fontFamily: 'Roboto-Medium', fontSize: 12, color: '#CCCCCC' }}>
-                                            {formatVietnamDate(item.createdAt)}
-                                        </Text>
+                    <View key={index} style={{ borderBottomWidth: 1, paddingBottom: 20, borderColor: '#DDDDDDCC', marginTop: 22, marginHorizontal: 16 }}>
+                        <View style={{ flexDirection: 'row' }}>
+                            <View style={{ width: PAGE_WIDTH * 0.12, height: PAGE_HEIGHT * 0.06 }}>
+                                <Image source={{ uri: item.avatar }} style={{ width: '100%', height: '100%', borderRadius: 50 }} />
+                            </View>
+                            <View style={{ marginLeft: 10 }}>
+                                <Text style={{ fontWeight: '500', fontFamily: 'Roboto-Medium', fontSize: 14, color: '#1E1E1E' }}>{item.fullName}</Text>
+                                <View style={{ flexDirection: 'row', marginTop: 5 }}>
+                                    <View>
+                                        {item.rating >= 1 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
                                     </View>
+                                    <View style={{ marginLeft: 5 }}>
+                                        {item.rating >= 2 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
+                                    </View>
+                                    <View style={{ marginLeft: 5 }}>
+                                        {item.rating >= 3 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
+                                    </View>
+                                    <View style={{ marginLeft: 5 }}>
+                                        {item.rating >= 4 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
+                                    </View>
+                                    <View style={{ marginLeft: 5 }}>
+                                        {item.rating >= 5 ? <ColorStar width={15} height={15} /> : <StarIcon width={15} height={15} />}
+                                    </View>
+                                    <Text style={{ marginLeft: 4, fontWeight: '500', fontFamily: 'Roboto-Medium', fontSize: 12, color: '#CCCCCC' }}>
+                                        {formatVietnamDate(item.createdAt)}
+                                    </Text>
                                 </View>
                             </View>
-                            <Text style={{ marginTop: 10, fontWeight: '400', fontFamily: 'Roboto-Regular', color: '#595959' }}>{item.comment}</Text>
-                            {item.imagecomment.length > 0 && (
-                                <View style={{
-                                    width: PAGE_WIDTH * 0.9,
-                                    height: PAGE_HEIGHT * 0.25,
-                                    marginTop: 8,
-                                    borderRadius: 4,
-                                    alignSelf: 'center',
-                                    marginHorizontal: 16
-                                }}>
-                                    <Image
-                                        source={{ uri: item.imagecomment[0] }}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            borderRadius: 4,
-                                        }}
-                                    />
-                                </View>
-                            )}
                         </View>
+                        <Text style={{ marginTop: 10, fontWeight: '400', fontFamily: 'Roboto-Regular', color: '#595959' }}>{item.comment}</Text>
+                        {item.imagecomment.length > 0 && (
+                            <View style={{
+                                width: PAGE_WIDTH * 0.9,
+                                height: PAGE_HEIGHT * 0.25,
+                                marginTop: 8,
+                                borderRadius: 4,
+                                alignSelf: 'center',
+                                marginHorizontal: 16
+                            }}>
+                                <Image
+                                    source={{ uri: item.imagecomment[0] }}
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        borderRadius: 4,
+                                    }}
+                                />
+                            </View>
+                        )}
                     </View>
                 ))}
             </View>
