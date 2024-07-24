@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     },
     seeMore: {
         fontWeight: 'bold',
-        color: 'black'
+        color: 'black',
     },
     title_text: {
         marginTop: 12,
@@ -151,9 +151,10 @@ const styles = StyleSheet.create({
     textStyle: {
         fontSize: 14,
         fontWeight: '400',
-        color: 'rgba(101, 103, 107, 1)',
+        color: '#000000',
         lineHeight: 25,
-        fontFamily: 'Roboto-Regular'
+        fontFamily: 'Roboto-Regular',
+        marginTop:8,
     },
     from_location: {
         fontWeight: '700',

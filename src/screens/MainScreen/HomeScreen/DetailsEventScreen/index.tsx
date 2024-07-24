@@ -14,11 +14,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const DetailsEventScreen = ({ navigation, route }: any) => {
     const { item } = route.params;
-    const [eventId, setEventId] = useState(null);
+    const PAGE_WIDTH = Dimensions.get('window').width;
+    const PAGE_HEIGHT = Dimensions.get('window').height;
     const [event, setEvent] = useState({
         id: '',
         image: '',
         startDate: '',
+        endDate: '',
         nameEvent: '',
         participantUsersCount: 0,
         createBy: '',
@@ -32,122 +34,92 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
         ],
         location: { latitude: 0, longitude: 0 },
         address: '',
-        type: ''
+        type: '',
+        isInterested: false,
+        isParticipant: false
     });
 
-    const [suggestedEvent, setSuggestedEvent] = useState([]);
-    const PAGE_WIDTH = Dimensions.get('window').width;
-    const PAGE_HEIGHT = Dimensions.get('window').height;
-
     useEffect(() => {
-        const fetchPressedStates = async () => {
+        const fetchData = async () => {
             try {
-                const quanTamValue = await AsyncStorage.getItem(`pressedQuanTam${eventId}`);
-                if (quanTamValue !== null) {
-                    setPressedQuanTam(JSON.parse(quanTamValue));
-                }
-                const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${eventId}`);
-                if (seThamGiaValue !== null) {
-                    setPressedSeThamGia(JSON.parse(seThamGiaValue));
-                }
+                const accessToken = await AsyncStorage.getItem('accessToken');
+                const response = await axios.get(`http://192.53.172.131:1050/home/getEvent/${item.id}`,
+                    {
+                        headers:{
+                            'Authorization':accessToken
+                        }
+                    }
+                );
+                const fetchData = response.data.event;
+                setEvent(fetchData);
             } catch (error: any) {
-                console.error('Error fetching pressed states from AsyncStorage:', error.message);
+                console.error('Error fetching data:', error.message);
             }
         };
 
-        fetchPressedStates();
-    }, [eventId]);
+        fetchData();
+    }, [item.id]);
 
-    const [pressedQuanTam, setPressedQuanTam] = useState(false);
     const handleQuanTamPress = async () => {
         try {
-            const accessToken = await AsyncStorage.getItem('accessToken')
-            const response = await axios.post(
-                `http://192.53.172.131:1050/home/toggleInterestEvent/${eventId}`,
+            const accessToken = await AsyncStorage.getItem('accessToken');
+            const response = await axios.put(
+                `http://192.53.172.131:1050/home/toggleInterestEvent/${item.id}`,
                 {},
                 {
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': accessToken,
                     },
                 }
             );
             const result = response.data;
-            console.log('Toggle pressedQuanTam Result:', result);
-            if (result.isInterested !== undefined) {
-                setPressedQuanTam(result.isInterested);
-                await AsyncStorage.setItem(`pressedQuanTam${eventId}`, JSON.stringify(result.isInterested));
-            } else {
-                console.error('Invalid toggleInterestEvent response:', result);
-            }
+            console.log('isInterested:', result.isInterested);
+            setEvent(prevState => ({
+                ...prevState,
+                isInterested: result.isInterested,
+            }));
         } catch (error: any) {
             console.error('Error toggling interest:', error.message);
         }
     };
-    const [pressedSeThamGia, setPressedSeThamGia] = useState(false);
+
     const handleSeThamGiaPress = async () => {
         try {
-            const accessToken = await AsyncStorage.getItem('accessToken')
-            const response = await axios.post(
-                `http://192.53.172.131:1050/home/toggleParticipantEvent/${eventId}`,
+            const accessToken = await AsyncStorage.getItem('accessToken');
+            const response = await axios.put(
+                `http://192.53.172.131:1050/home/toggleParticipantEvent/${item.id}`,
                 {},
                 {
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': accessToken,
                     },
                 }
             );
             const result = response.data;
-            console.log('Toggle pressedSeThamGia Result:', result);
-            if (result.isInterested !== undefined) {
-                setPressedSeThamGia(result.isInterested);
-                await AsyncStorage.setItem(`pressedSeThamGia${eventId}`, JSON.stringify(result.isInterested));
-            } else {
-                console.error('Invalid toggleParticipantEvent response:', result);
-            }
+            console.log('isParticipant:', result.isParticipant);
+            setEvent(prevState => ({
+                ...prevState,
+                isParticipant: result.isParticipant,
+            }));
         } catch (error: any) {
             console.error('Error toggling participation:', error.message);
         }
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`http://192.53.172.131:1050/home/getEvent/${item.id}`);
-                if (response.data && response.data.event) {
-                    const fetchedEvent = response.data.event;
-                    setEvent(fetchedEvent);
-                    setPressedSeThamGia(fetchedEvent.isInterested);
-                    const eventId = item.id;
-                    setEventId(eventId)
-                    await AsyncStorage.setItem('pressedSeThamGia', JSON.stringify(fetchedEvent.isInterested));
-                } else {
-                    console.error('Invalid response structure', response.data);
-                }
-            } catch (error: any) {
-                console.error('Error fetching data:', error.message);
-            }
-        };
-        fetchData();
-    }, [item.id]);
-
+    const [suggestedEvent, setSuggestedEvent] = useState([]);
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${eventId}`);
-                if (response.data && response.data.events) {
-                    setSuggestedEvent(response.data.events);
-                } else {
-                    console.error('Invalid response structure', response.data);
-                }
+                const response = await axios.get(`http://192.53.172.131:1050/home/getAllEventsSuggest/${item.id}`);
+                const fetchEvents = response.data.events;
+                setSuggestedEvent(fetchEvents);
             } catch (error: any) {
                 console.error('Error fetching events:', error.message);
             }
         };
 
         fetchEvents();
-    }, [eventId]);
+    }, [item.id]);
 
     moment.locale('en');
     const formatVietnamDate = (utcDate: any) => {
@@ -168,7 +140,6 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
         const year = vietnamDate.year();
         return `${dayOfWeek}, ${day} THÁNG ${month} NĂM ${year}`;
     };
-
     return (
         <View style={styles.container}>
             <View style={styles.from_hearder}>
@@ -209,37 +180,38 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
                                 <TouchableOpacity
                                     style={[
                                         styles.careAbout,
-                                        { backgroundColor: pressedQuanTam ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                                        { backgroundColor: event.isInterested === true ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                                     ]}
                                     accessibilityLabel="Interested"
                                     accessibilityHint="Mark your interest for the event"
                                     onPress={handleQuanTamPress}
                                 >
                                     <View style={styles.titleIcon}>
-                                        {pressedQuanTam ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
+                                        {event.isInterested === true ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
                                     </View>
                                     <Text style={[
                                         styles.headingAbout,
-                                        { color: pressedQuanTam ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
+                                        { color: event.isInterested === true ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
                                     ]}>
                                         Quan tâm
                                     </Text>
                                 </TouchableOpacity>
+
                                 <TouchableOpacity
                                     style={[
                                         styles.careAbout,
-                                        { backgroundColor: pressedSeThamGia ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                                        { backgroundColor: event.isParticipant === true ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                                     ]}
                                     accessibilityLabel="Will attend"
                                     accessibilityHint="Mark your attendance for the event"
                                     onPress={handleSeThamGiaPress}
                                 >
                                     <View style={styles.titleIcon}>
-                                        {pressedSeThamGia ? <ColorCheckOne /> : <CheckOne />}
+                                        {event.isParticipant === true ? <ColorCheckOne /> : <CheckOne />}
                                     </View>
                                     <Text style={[
                                         styles.headingAbout,
-                                        { color: pressedSeThamGia ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
+                                        { color: event.isParticipant === true ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
                                     ]}>
                                         Sẽ tham gia
                                     </Text>
@@ -277,7 +249,7 @@ const DetailsEventScreen = ({ navigation, route }: any) => {
                             </View>
                             <View style={{ marginTop: 15 }}>
                                 <Text style={styles.title_text}>2.{event.descriptionSections[1]?.title}</Text>
-                                <ReadMore numberOfLines={5}
+                                <ReadMore numberOfLines={3}
                                     animate={true}
                                     expandOnly={true}
                                     seeMoreText="Đọc thêm"
