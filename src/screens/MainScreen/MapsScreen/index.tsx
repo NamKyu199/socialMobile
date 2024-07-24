@@ -74,13 +74,34 @@ const MapsScreen = ({ navigation }: any) => {
     setSelectedOption((prev) => ({ ...prev, showNotification: true }));
   }, []);
 
-  const [eventDetails, setEventDetails] = useState<any>(null);
-  const [suggestedEvent, setSuggestedEvent] = useState([]);
-  const [pressedSeThamGia, setPressedSeThamGia] = useState(false);
   const [locationSaveID, setLocationSaveID] = useState(null);
-  const [eventIds, setEventIds] = useState<any>(null);
 
-  const handleShowModalEvent = async (eventId: any) => {
+  const [eventDetails, setEventDetails] = useState({
+    id: '',
+    image: '',
+    startDate: '',
+    endDate: '',
+    nameEvent: '',
+    participantUsersCount: 0,
+    createBy: '',
+    company: '',
+    descriptionSections: [
+      {
+        title: '',
+        content: '',
+        id: ''
+      }
+    ],
+    location: { latitude: 0, longitude: 0 },
+    address: '',
+    type: '',
+    isInterested: false,
+    isParticipant: false
+  });
+  const [suggestedEvent, setSuggestedEvent] = useState([]);
+  const [eventIds, setEventIds] = useState('');
+
+  const handleShowModalEvent = async (eventId: string) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const [eventResponse, suggestedResponse] = await Promise.all([
@@ -100,49 +121,23 @@ const MapsScreen = ({ navigation }: any) => {
     }
   };
 
-  useEffect(() => {
-    const fetchPressedStates = async () => {
-      try {
-        const seThamGiaValue = await AsyncStorage.getItem(`pressedSeThamGia${eventIds}`);
-        if (seThamGiaValue !== null) {
-          setPressedSeThamGia(JSON.parse(seThamGiaValue));
-        }
-      } catch (error: any) {
-        console.error('Error fetching pressed states from AsyncStorage:', error.message);
-      }
-    };
-
-    if (eventIds !== null) {
-      fetchPressedStates();
-    }
-  }, [eventIds]);
-
-  const [pressedQuanTamStates, setPressedQuanTamStates] = useState<{ [key: string]: boolean }>({});
-
   const handleQuanTamPress = async (eventId: string) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
-      const response = await axios.post(
+      const response = await axios.put(
         `http://192.53.172.131:1050/home/toggleInterestEvent/${eventId}`,
         {},
         {
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: accessToken,
+            'Authorization': accessToken,
           },
         }
       );
       const result = response.data;
-      console.log('Toggle pressedQuanTam Result:', result);
-      if (result.isInterested !== undefined) {
-        setPressedQuanTamStates((prevState) => ({
-          ...prevState,
-          [eventId]: result.isInterested,
-        }));
-        await AsyncStorage.setItem(`pressedQuanTam${eventId}`, JSON.stringify(result.isInterested));
-      } else {
-        console.error('Invalid toggleInterestEvent response:', result);
-      }
+      console.log('isInterested:', result.isInterested);
+      setEventNews((prevEvents: any[]) => prevEvents.map(event =>
+        event.id === eventId ? { ...event, isInterested: result.isInterested } : event
+      ));
     } catch (error: any) {
       console.error('Error toggling interest:', error.message);
     }
@@ -151,73 +146,44 @@ const MapsScreen = ({ navigation }: any) => {
   const handleQuanTamPressMore = async (eventId: string) => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
-      const response = await axios.post(
+      const response = await axios.put(
         `http://192.53.172.131:1050/home/toggleInterestEvent/${eventId}`,
         {},
         {
           headers: {
-            'Content-Type': 'application/json',
             Authorization: accessToken,
           },
         }
       );
       const result = response.data;
-      console.log('Toggle pressedQuanTam Result:', result);
-      if (result.isInterested !== undefined) {
-        setPressedQuanTamStates((prevState) => ({
-          ...prevState,
-          [eventId]: result.isInterested,
-        }));
-        await AsyncStorage.setItem(`pressedQuanTam${eventId}`, JSON.stringify(result.isInterested));
-      } else {
-        console.error('Invalid toggleInterestEvent response:', result);
-      }
+      console.log('isInterested:', result.isInterested);
+      setEventDetails((prevState: any) => ({
+        ...prevState,
+        isInterested: result.isInterested,
+      }));
     } catch (error: any) {
       console.error('Error toggling interest:', error.message);
     }
   };
 
-  useEffect(() => {
-    const loadPressedQuanTamStates = async () => {
-      try {
-        const events = await AsyncStorage.getItem(`pressedQuanTam`);
-        if (events) {
-          const parsedEvents = JSON.parse(events);
-          const initialStates: { [key: string]: boolean } = {};
-          parsedEvents.forEach((event: any) => {
-            initialStates[event.id] = event.isInterested;
-          });
-          setPressedQuanTamStates(initialStates);
-        }
-      } catch (error: any) {
-        console.error('Error loading pressedQuanTam states:', error.message);
-      }
-    };
-
-    loadPressedQuanTamStates();
-  }, []);
-
   const handleSeThamGiaPress = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
-      const response = await axios.post(
+      const response = await axios.put(
         `http://192.53.172.131:1050/home/toggleParticipantEvent/${eventIds}`,
         {},
         {
           headers: {
-            'Content-Type': 'application/json',
             Authorization: accessToken,
           },
         }
       );
       const result = response.data;
-      console.log('Toggle pressedSeThamGia Result:', result);
-      if (result.isInterested !== undefined) {
-        setPressedSeThamGia(result.isInterested);
-        await AsyncStorage.setItem(`pressedSeThamGia${eventIds}`, JSON.stringify(result.isInterested));
-      } else {
-        console.error('Invalid toggleParticipantEvent response:', result);
-      }
+      console.log('isParticipant:', result.isParticipant);
+      setEventDetails((prevState: any) => ({
+        ...prevState,
+        isParticipant: result.isParticipant,
+      }));
     } catch (error: any) {
       console.error('Error toggling participation:', error.message);
     }
@@ -376,7 +342,6 @@ const MapsScreen = ({ navigation }: any) => {
   useEffect(() => {
     if (position) {
       fetchLocations(position.latitude, position.longitude);
-      fetchEventNews(position.latitude, position.longitude);
     }
   }, [position]);
 
@@ -393,23 +358,25 @@ const MapsScreen = ({ navigation }: any) => {
     }
   };
 
-  const fetchEventNews = async (latitude: number, longitude: number) => {
+  const fetchEventNews = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
-      const response = await axios.post('http://192.53.172.131:1050/home/getEventsLocation', {
-        latitude: latitude,
-        longitude: longitude,
+      const response = await axios.get('http://192.53.172.131:1050/home/getEventsLocation', {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': accessToken,
+          'Authorization': accessToken
         }
       });
-      const events = response.data.events;
-      setEventNews(events);
+      const fetchEventNews = response.data.events;
+      setEventNews(fetchEventNews);
     } catch (error: any) {
-      console.error('Error fetching events :', error.message);
+      console.error('Error fetching data:', error.message);
     }
   };
+
+  useEffect(() => {
+    fetchEventNews();
+  }, []);
+
   moment.locale('vi');
   const formatVietnamDate = (utcDate: string) => {
     const vietnamDate = moment.utc(utcDate).tz('Asia/Ho_Chi_Minh');
@@ -770,18 +737,18 @@ const MapsScreen = ({ navigation }: any) => {
                     <TouchableOpacity
                       style={[
                         styles.careAbout,
-                        { backgroundColor: pressedQuanTamStates[item.id] ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                        { backgroundColor: item.isInterested === true ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                       ]}
                       accessibilityLabel="Interested"
                       accessibilityHint="Mark your interest for the event"
                       onPress={() => handleQuanTamPress(item.id)}
                     >
                       <View style={styles.titleIcon}>
-                        {pressedQuanTamStates[item.id] ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
+                        {item.isInterested === true ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
                       </View>
                       <Text style={[
                         styles.headingAbout,
-                        { color: pressedQuanTamStates[item.id] ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
+                        { color: item.isInterested === true ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
                       ]}>
                         Quan tâm
                       </Text>
@@ -877,7 +844,13 @@ const MapsScreen = ({ navigation }: any) => {
         onRequestClose={() => setSelectedOption((prev) => ({ ...prev, showModalEvent: false }))}>
         <View style={styles.modalContainer}>
           <View style={styles.modalEvent}>
-            <TouchableOpacity onPress={() => setSelectedOption((prev) => ({ ...prev, showModalEvent: false }))} style={{ alignSelf: 'flex-end', padding: 10 }}>
+            <TouchableOpacity
+              onPress={async () => {
+                setSelectedOption((prev) => ({ ...prev, showModalEvent: false }));
+                await fetchEventNews();
+              }}
+              style={{ alignSelf: 'flex-end', padding: 10 }}
+            >
               <CloseCircle color='#59595999' variant="Bold" size={35} />
             </TouchableOpacity>
             <ScrollView >
@@ -918,18 +891,18 @@ const MapsScreen = ({ navigation }: any) => {
                             paddingVertical: 10,
                             paddingHorizontal: 25,
                           },
-                          { backgroundColor: pressedQuanTamStates[eventIds] ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                          { backgroundColor: eventDetails.isInterested === true ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                         ]}
                         accessibilityLabel="Interested"
                         accessibilityHint="Mark your interest for the event"
                         onPress={() => handleQuanTamPressMore(eventIds)}
                       >
                         <View style={styles.titleIcon}>
-                          {pressedQuanTamStates[eventIds] ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
+                          {eventDetails.isInterested === true ? <ColorStar width={15} height={15} /> : <Star width={15} height={15} />}
                         </View>
                         <Text style={[
                           styles.headingAbout,
-                          { color: pressedQuanTamStates[eventIds] ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
+                          { color: eventDetails.isInterested === true ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
                         ]}>
                           Quan tâm
                         </Text>
@@ -944,18 +917,18 @@ const MapsScreen = ({ navigation }: any) => {
                             paddingVertical: 10,
                             paddingHorizontal: 20
                           },
-                          { backgroundColor: pressedSeThamGia ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
+                          { backgroundColor: eventDetails.isParticipant === true ? 'rgba(82, 5, 127, 1)' : 'rgba(242, 242, 242, 1)' },
                         ]}
                         accessibilityLabel="Will attend"
                         accessibilityHint="Mark your attendance for the event"
                         onPress={handleSeThamGiaPress}
                       >
                         <View style={styles.titleIcon}>
-                          {pressedSeThamGia ? <ColorCheckOne /> : <CheckOne />}
+                          {eventDetails.isParticipant === true ? <ColorCheckOne /> : <CheckOne />}
                         </View>
                         <Text style={[
                           styles.headingAbout,
-                          { color: pressedSeThamGia ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
+                          { color: eventDetails.isParticipant === true ? 'rgba(255, 255, 255, 1)' : 'rgba(89, 89, 89, 1)' },
                         ]}>
                           Sẽ tham gia
                         </Text>

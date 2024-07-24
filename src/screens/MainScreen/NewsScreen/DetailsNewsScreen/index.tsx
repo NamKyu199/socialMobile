@@ -151,7 +151,7 @@ const DetailsNewsScreen = ({ route, navigation }: any) => {
                         <HTML source={{ html: news.description }} contentWidth={contentWidth} />
                     </View>
                 </View>
-                <View style={{ marginTop: 30 }}>
+                <View style={{ marginTop: 30,marginBottom:28 }}>
                     <View style={{ borderLeftWidth: 6, marginLeft: 16, borderColor: 'rgba(151, 78, 195, 1)', }}>
                         <Text style={{ fontWeight: '600', fontSize: 22, lineHeight: 30, color: 'rgba(30, 30, 30, 1)', fontFamily: 'Roboto-Medium', marginLeft: 8 }}>Tin cùng chuyên mục</Text>
                     </View>
