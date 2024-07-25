@@ -189,11 +189,10 @@ const MapsScreen = ({ navigation }: any) => {
     }
   };
 
-  const [toggleLocationSaved, setToggleLocationSaved] = useState<boolean>(false);
   const handleSaveLocationPress = async () => {
     try {
-      const accessToken = await AsyncStorage.getItem('accessToken');
-      const response = await axios.post(
+      const accessToken = await AsyncStorage.getItem('accessToken'); 
+      const response = await axios.put(
         `http://192.53.172.131:1050/map/toggleLocationSaved/${locationSaveID}`,
         {},
         {
@@ -203,34 +202,15 @@ const MapsScreen = ({ navigation }: any) => {
         }
       );
       const result = response.data;
-      console.log('Toggle pressedSaveLocation Result:', result);
-      if (result.isSaved !== undefined) {
-        setToggleLocationSaved(result.isSaved);
-        await AsyncStorage.setItem(`pressedSaveLocation${locationSaveID}`, JSON.stringify(result.isSaved));
-      } else {
-        console.error('Invalid toggleLocationSaved response:', result);
-      }
+      console.log('isSaved:', result.isSaved);
+      setLocations((prevState: any) => ({
+          ...prevState,
+          isSaved: result.isSaved,
+      }));
     } catch (error: any) {
       console.error('Error toggling location saved state:', error.message);
     }
   };
-
-  useEffect(() => {
-    const fetchSaveLocation = async () => {
-      try {
-        const saveLocation = await AsyncStorage.getItem(`pressedSaveLocation${locationSaveID}`);
-        if (saveLocation !== null) {
-          setToggleLocationSaved(JSON.parse(saveLocation));
-        }
-      } catch (error: any) {
-        console.error('Error fetching pressed states from AsyncStorage:', error.message);
-      }
-    };
-    if (locationSaveID !== null) {
-      fetchSaveLocation();
-    }
-  }, [locationSaveID]);
-
 
   const handleOpenBottomSheetMore = async (item: any) => {
     try {
@@ -1216,14 +1196,14 @@ const MapsScreen = ({ navigation }: any) => {
                       alignItems: 'center',
                       marginLeft: 16
                     },
-                    { backgroundColor: toggleLocationSaved ? '#E74FB1' : '#E74FB11A' }
+                    { backgroundColor: locations.isSaved === true ? '#E74FB1' : '#E74FB11A' }
                   ]}
                   accessibilityLabel="isSaved"
                   accessibilityHint="Mark your isSaved for the Location"
                   onPress={handleSaveLocationPress}
                 >
                   <View>
-                    {toggleLocationSaved ? (
+                    {locations.isSaved === true ? (
                       <ArchiveMinusColor color='#FFFFFF' style={{ marginLeft: 18 }} />
                     ) : (
                       <ArchiveMinus color='#E74FB1' style={{ marginLeft: 18 }} />
@@ -1238,7 +1218,7 @@ const MapsScreen = ({ navigation }: any) => {
                         fontSize: 14,
                         color: '#E74FB1'
                       },
-                      { color: toggleLocationSaved ? '#FFFFFF' : '#E74FB1' }
+                      { color: locations.isSaved === true ? '#FFFFFF' : '#E74FB1' }
                     ]}
                   >
                     Lưu

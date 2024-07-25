@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     },
     header_topComment: {
         paddingTop: 30,
-        marginLeft: 15,
+        paddingLeft: 15,
         fontWeight: '600',
         fontSize: 16,
         color: 'rgba(96, 96, 96, 1)',
