@@ -14,7 +14,7 @@ const CommunityScreen = ({ navigation, route }: any) => {
     return (
         <>
             <TabberComponent />
-            <View style={{ backgroundColor: 'rgba(255, 255, 255, 1)', height: 81, marginTop: 20, justifyContent: 'center' }}>
+            <View style={{ backgroundColor: 'rgba(255, 255, 255, 1)', height: 81, justifyContent: 'center' }}>
                 <TouchableOpacity
                     style={{ backgroundColor: 'rgba(244, 246, 248, 1)', height: 49, marginHorizontal: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }}
                     onPress={() => navigation.navigate('QuestionCreateScreen')}
